@@ -334,7 +334,12 @@ async function processVoiceOrderInBackground(
     const checkoutLink = `https://hauhau.menu/checkout/voice?session=${voiceOrderId}`;
     const confirmationText = `Got your voice order, Ustaad! 🔥\n\n${summaryRows}Estimated Total: ₹${estimatedTotal}\n\nClick this secure link to view your cart, enter your account password, and confirm payment within 5 minutes: ${checkoutLink}`;
 
-    await sendWhatsAppMessage(phoneNumberId, fromPhone, confirmationText);
+    const success = await sendWhatsAppMessage(phoneNumberId, fromPhone, confirmationText);
+    if (success) {
+      console.log(`[BACKGROUND TASK SUCCESS] Confirmation sent to ${fromPhone}`);
+    } else {
+      console.error(`[BACKGROUND TASK ERROR] Failed to send confirmation to ${fromPhone}`);
+    }
 
   } catch (error) {
     console.error('[BACKGROUND TASK EXCEPTION] Failed to process voice order:', error);
@@ -562,8 +567,12 @@ async function processGeneralChatInBackground(
     }
 
     // 8. Send message via WhatsApp
-    await sendWhatsAppMessage(phoneNumberId, fromPhone, reply);
-    console.log(`[BACKGROUND CHAT SUCCESS] Reply sent to ${fromPhone}`);
+    const success = await sendWhatsAppMessage(phoneNumberId, fromPhone, reply);
+    if (success) {
+      console.log(`[BACKGROUND CHAT SUCCESS] Reply sent to ${fromPhone}`);
+    } else {
+      console.error(`[BACKGROUND CHAT ERROR] Failed to send reply to ${fromPhone}`);
+    }
 
   } catch (error) {
     console.error('[BACKGROUND CHAT EXCEPTION] Failed to process general chat:', error);
