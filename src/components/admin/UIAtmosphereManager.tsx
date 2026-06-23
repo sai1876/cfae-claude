@@ -178,7 +178,7 @@ function ThemeDecorations({ theme, eventName }: { theme: string; eventName: stri
 
 export default function UIAtmosphereManager() {
   // Store settings state
-  const [activeTheme, setActiveTheme] = useState<'default' | 'exam' | 'raining' | 'fest' | 'night' | 'valentines' | 'scorching'>('default');
+  const [activeTheme, setActiveTheme] = useState<'default' | 'exam' | 'raining' | 'fest' | 'night' | 'valentines' | 'scorching' | 'custom'>('default');
   const [autoCalendarMode, setAutoCalendarMode] = useState(false);
   const [mockDateStr, setMockDateStr] = useState('');
   const [globalAutoScrollEnabled, setGlobalAutoScrollEnabled] = useState(false);

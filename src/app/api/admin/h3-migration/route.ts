@@ -11,6 +11,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    if (!adminDb) {
+      return NextResponse.json({ success: false, error: 'Firebase Admin not configured' }, { status: 500 });
+    }
     const staffRef = adminDb.collection('staff');
     const snapshot = await staffRef.where('role', '==', 'rider').get();
 

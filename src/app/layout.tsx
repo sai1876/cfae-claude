@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Playfair_Display, Space_Mono } from "next/font/google";
 import "./globals.css";
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
 import localFont from 'next/font/local';
 import { cn } from "@/lib/utils";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const fableNoir = localFont({
   src: './fonts/FableNoir.otf',
@@ -34,6 +35,20 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "Hau Hau Cafe",
   description: "Your escape from the heat.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Hau Hau Cafe",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FAF6F0",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -44,8 +59,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(dmSans.variable, playfair.variable, spaceMono.variable, fableNoir.variable)}>
       <body className="antialiased min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground">
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
   );
 }
+

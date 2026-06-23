@@ -58,8 +58,8 @@ export default function MenuPreview() {
             onClick={() => setActiveCategory(category)}
             className={`relative whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-mono uppercase tracking-widest transition-all duration-300 ${
               activeCategory === category
-                ? 'bg-primary text-primary-foreground shadow-[0_0_20px_rgba(248,188,81,0.4)] border border-primary'
-                : 'bg-white/5 text-on-surface-variant hover:text-on-surface hover:bg-white/10 border border-white/10'
+                ? 'bg-primary text-primary-foreground shadow-[0_0_20px_rgba(198,139,53,0.35)] border border-primary'
+                : 'bg-foreground/5 text-on-surface-variant hover:text-on-surface hover:bg-foreground/10 border border-foreground/10'
             }`}
           >
             {category}
@@ -82,7 +82,7 @@ export default function MenuPreview() {
                 setCustomizingItem(item);
               }
             }}
-            className={`group relative bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(248,188,81,0.3)] cursor-pointer ${
+            className={`group relative bg-card rounded-3xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(198,139,53,0.2)] cursor-pointer ${
               !item.is_available ? 'opacity-50 grayscale pointer-events-none' : ''
             }`}
           >
@@ -101,15 +101,15 @@ export default function MenuPreview() {
                 className="absolute inset-0 pointer-events-none transition-opacity duration-500"
                 style={{
                   background: `
-                    radial-gradient(circle at center, transparent 35%, rgba(10, 6, 4, 0.4) 100%),
-                    linear-gradient(to top, var(--surface) 0%, rgba(18, 10, 6, 0.3) 15%, transparent 45%)
+                    radial-gradient(circle at center, transparent 35%, rgba(var(--foreground-rgb), 0.1) 100%),
+                    linear-gradient(to top, var(--surface) 0%, rgba(var(--foreground-rgb), 0.05) 15%, transparent 45%)
                   `
                 }}
               />
-              {/* Availability Indicator (Solid Obsidian High-Contrast Capsule) */}
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-[#0A0604] px-3 py-1.5 rounded-full border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-10">
+              {/* Availability Indicator (Solid High-Contrast Capsule) */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-background px-3 py-1.5 rounded-full border border-border shadow-[0_4px_12px_rgba(44,26,16,0.08)] z-10">
                 <div className={`w-1.5 h-1.5 rounded-full ${item.is_available ? 'bg-[#10B981] shadow-[0_0_8px_#10B981]' : 'bg-[#EF4444]'}`} />
-                <span className={`text-[10px] font-mono uppercase tracking-wider font-bold ${item.is_available ? 'text-white' : 'text-[#EF4444]'}`}>
+                <span className={`text-[10px] font-mono uppercase tracking-wider font-bold ${item.is_available ? 'text-foreground' : 'text-[#EF4444]'}`}>
                   {item.is_available ? 'Available' : 'Sold Out'}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export default function MenuPreview() {
                     }
                   }}
                   disabled={!item.is_available}
-                  className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-bright hover:text-primary hover:border-primary transition-all disabled:opacity-50 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                  className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-bright hover:text-primary hover:border-primary transition-all disabled:opacity-50 group-hover:shadow-[0_0_15px_rgba(44,26,16,0.05)]"
                 >
                   <Plus size={18} strokeWidth={1.5} />
                 </button>

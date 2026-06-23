@@ -147,19 +147,19 @@ export default function MenuPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0b07', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--background)', paddingBottom: 100 }}>
       {/* ── Header ── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 40,
-        background: 'rgba(14,11,7,0.95)',
+        background: 'rgba(var(--background-rgb),0.95)',
         backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(212,163,84,0.1)',
+        borderBottom: '1px solid var(--border)',
         padding: '16px 16px 0',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <p style={{ color: 'rgba(212,163,84,0.6)', fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>Oasis Cafe</p>
+              <p style={{ color: 'var(--primary)', fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>Oasis Cafe</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(232,98,26,0.08)', border: '1px solid rgba(232,98,26,0.15)', borderRadius: 12, padding: '2px 8px' }}>
                 <MapPin size={9} color="#e8621a" />
                 <CustomSelect 
@@ -181,13 +181,13 @@ export default function MenuPage() {
                     cursor: 'pointer',
                     padding: 0
                   }}
-                  optionStyle={{ color: 'rgba(255,255,255,0.7)', background: 'transparent' }}
+                  optionStyle={{ color: 'var(--foreground)', background: 'transparent' }}
                   activeOptionStyle={{ color: '#e8621a', background: 'rgba(232,98,26,0.1)' }}
                   dropdownStyle={{ left: 0, right: 'auto', minWidth: 140 }}
                 />
               </div>
             </div>
-            <h1 style={{ color: 'rgba(255,255,255,0.92)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, margin: '4px 0 0' }}>Our Menu</h1>
+            <h1 style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, margin: '4px 0 0' }}>Our Menu</h1>
           </div>
           <div style={{
             background: 'rgba(212,163,84,0.08)', border: '1px solid rgba(212,163,84,0.15)',
@@ -201,21 +201,21 @@ export default function MenuPage() {
         {/* Search & Sort */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(212,163,84,0.5)' }} />
+            <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(var(--foreground-rgb), 0.4)' }} />
             <input
               ref={searchRef}
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search menu..."
               style={{
-                width: '100%', background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(212,163,84,0.12)', borderRadius: 12,
-                padding: '10px 36px 10px 36px', color: 'rgba(255,255,255,0.85)',
+                width: '100%', background: 'rgba(var(--foreground-rgb),0.04)',
+                border: '1px solid var(--border)', borderRadius: 12,
+                padding: '10px 36px 10px 36px', color: 'var(--foreground)',
                 fontSize: 13, outline: 'none', boxSizing: 'border-box',
               }}
             />
             {search && (
-              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(var(--foreground-rgb),0.35)', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <X size={14} />
               </button>
             )}
@@ -230,17 +230,17 @@ export default function MenuPage() {
               { value: 'price_desc', label: 'Price: High to Low' }
             ]}
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(212,163,84,0.12)',
+              background: 'rgba(var(--foreground-rgb),0.04)',
+              border: '1px solid var(--border)',
               borderRadius: 12,
               padding: '10px 12px',
-              color: 'rgba(255,255,255,0.85)',
+              color: 'var(--foreground)',
               fontSize: 13,
               outline: 'none',
               cursor: 'pointer'
             }}
-            optionStyle={{ color: 'rgba(255,255,255,0.7)', background: 'transparent' }}
-            activeOptionStyle={{ color: '#d4a354', background: 'rgba(212,163,84,0.1)' }}
+            optionStyle={{ color: 'var(--foreground)', background: 'transparent' }}
+            activeOptionStyle={{ color: 'var(--primary)', background: 'rgba(198,139,53,0.08)' }}
           />
         </div>
 
@@ -254,9 +254,9 @@ export default function MenuPage() {
                 onClick={() => setActiveCategory(cat)}
                 style={{
                   flexShrink: 0, padding: '6px 14px', borderRadius: 20,
-                  border: active ? '1px solid #d4a354' : '1px solid rgba(255,255,255,0.08)',
-                  background: active ? 'rgba(212,163,84,0.15)' : 'transparent',
-                  color: active ? '#d4a354' : 'rgba(255,255,255,0.45)',
+                  border: active ? '1px solid var(--primary)' : '1px solid var(--border)',
+                  background: active ? 'rgba(198,139,53,0.1)' : 'transparent',
+                  color: active ? 'var(--primary)' : 'var(--muted-foreground)',
                   fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.2s',
                   whiteSpace: 'nowrap',
@@ -275,8 +275,8 @@ export default function MenuPage() {
         {offers.length > 0 && (
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <Ticket size={13} color="#d4a354" />
-              <span style={{ color: '#d4a354', fontFamily: 'monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Active Special Offers</span>
+              <Ticket size={13} color="var(--primary)" />
+              <span style={{ color: 'var(--primary)', fontFamily: 'monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Active Special Offers</span>
             </div>
             <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
               {offers.map(offer => (
@@ -285,33 +285,34 @@ export default function MenuPage() {
                   style={{
                     flexShrink: 0,
                     width: 280,
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(212,163,84,0.12)',
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
                     borderRadius: 16,
                     padding: 10,
                     display: 'flex',
                     gap: 10,
                     alignItems: 'center',
+                    boxShadow: '0 4px 15px rgba(44, 26, 16, 0.03)',
                     backdropFilter: 'blur(10px)'
                   }}
                 >
-                  <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(212,163,84,0.15)', background: '#1c1512' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border)', background: 'var(--muted)' }}>
                     {offer.imageUrl ? (
                       <img src={offer.imageUrl} alt={offer.code} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(212,163,84,0.08)' }}>
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(198,139,53,0.05)' }}>
                         🎟️
                       </div>
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#d4a354', fontWeight: 800, fontSize: 12, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{offer.code}</span>
-                      <span style={{ background: 'rgba(212,163,84,0.15)', border: '1px solid rgba(212,163,84,0.3)', borderRadius: 6, padding: '1px 4px', color: '#d4a354', fontSize: 8, fontWeight: 700, fontFamily: 'monospace' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifySpaceBetween: 'space-between' } as any}>
+                      <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 12, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{offer.code}</span>
+                      <span style={{ background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)', borderRadius: 6, padding: '1px 4px', color: 'var(--primary)', fontSize: 8, fontWeight: 700, fontFamily: 'monospace' }}>
                         {offer.discountPercent}% OFF
                       </span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10.5, margin: '4px 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.3 }}>
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: 10.5, margin: '4px 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.3 }}>
                       {offer.description}
                     </p>
                     <button
@@ -321,11 +322,11 @@ export default function MenuPage() {
                         setTimeout(() => setCopiedCode(null), 2000);
                       }}
                       style={{
-                        background: copiedCode === offer.code ? 'rgba(74,222,128,0.15)' : 'rgba(212,163,84,0.08)',
-                        border: `1px solid ${copiedCode === offer.code ? 'rgba(74,222,128,0.3)' : 'rgba(212,163,84,0.2)'}`,
+                        background: copiedCode === offer.code ? 'rgba(110,156,98,0.12)' : 'rgba(198,139,53,0.05)',
+                        border: `1px solid ${copiedCode === offer.code ? 'rgba(110,156,98,0.25)' : 'rgba(198,139,53,0.15)'}`,
                         borderRadius: 6,
                         padding: '3px 8px',
-                        color: copiedCode === offer.code ? '#4ade80' : '#d4a354',
+                        color: copiedCode === offer.code ? 'var(--secondary)' : 'var(--primary)',
                         fontSize: 9,
                         fontFamily: 'monospace',
                         fontWeight: 600,
@@ -355,8 +356,8 @@ export default function MenuPage() {
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} style={{
               height: 90, borderRadius: 16,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(212,163,84,0.07)',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
               animation: 'menuPulse 1.4s ease-in-out infinite',
               animationDelay: `${i * 0.1}s`,
             }} />
@@ -365,10 +366,10 @@ export default function MenuPage() {
           /* Empty state */
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '60px 20px', textAlign: 'center' }}>
             <span style={{ fontSize: 56 }}>🍽️</span>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, fontWeight: 600 }}>No items found</p>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Try a different category or search term</p>
+            <p style={{ color: 'var(--foreground)', fontSize: 16, fontWeight: 600 }}>No items found</p>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>Try a different category or search term</p>
             {search && (
-              <button onClick={() => setSearch('')} style={{ padding: '8px 20px', borderRadius: 20, background: 'rgba(212,163,84,0.12)', border: '1px solid rgba(212,163,84,0.25)', color: '#d4a354', fontSize: 12, cursor: 'pointer' }}>
+              <button onClick={() => setSearch('')} style={{ padding: '8px 20px', borderRadius: 20, background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)', color: 'var(--primary)', fontSize: 12, cursor: 'pointer' }}>
                 Clear Search
               </button>
             )}
@@ -385,8 +386,9 @@ export default function MenuPage() {
                 onClick={() => handleAddItem(item)}
                 style={{
                   display: 'flex', gap: 12, alignItems: 'stretch',
-                  background: 'rgba(255,255,255,0.035)',
-                  border: '1px solid rgba(212,163,84,0.1)',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 4px 20px rgba(44, 26, 16, 0.04)',
                   borderRadius: 16, overflow: 'hidden', cursor: item.is_available ? 'pointer' : 'default',
                   position: 'relative', transition: 'border-color 0.2s',
                 }}
@@ -416,28 +418,28 @@ export default function MenuPage() {
                 <div style={{ flex: 1, padding: '12px 12px 12px 0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 600, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{item.name}</p>
+                      <p style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{item.name}</p>
                       {item.is_featured && (
                         <span style={{
                           display: 'flex', alignItems: 'center', gap: 2,
-                          background: 'rgba(212,163,84,0.15)', border: '1px solid rgba(212,163,84,0.3)',
+                          background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)',
                           borderRadius: 10, padding: '1px 6px',
-                          color: '#d4a354', fontSize: 8.5, fontWeight: 700, flexShrink: 0,
+                          color: 'var(--primary)', fontSize: 8.5, fontWeight: 700, flexShrink: 0,
                         }}>
-                          <Star size={7} fill="#d4a354" /> FEATURED
+                          <Star size={7} fill="var(--primary)" /> FEATURED
                         </span>
                       )}
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', lineHeight: 1.4 }}>{item.description}</p>
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: 11.5, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', lineHeight: 1.4 }}>{item.description}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                    <p style={{ color: '#d4a354', fontWeight: 700, fontSize: 15, fontFamily: 'monospace' }}>₹{item.price}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifySpaceBetween: 'space-between' } as any}>
+                    <p style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 15, fontFamily: 'monospace' }}>₹{item.price}</p>
                     {item.is_available && (
                       <button
                         onClick={e => { e.stopPropagation(); handleAddItem(item); }}
                         style={{
                           width: 32, height: 32, borderRadius: 10,
-                          background: 'linear-gradient(135deg,#c49040,#8a5f1e)',
+                          background: 'linear-gradient(135deg,#e2a855,#a26b1f)',
                           border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           boxShadow: '0 2px 8px rgba(196,144,64,0.3)',
                         }}
@@ -464,7 +466,7 @@ export default function MenuPage() {
           >
             <Link href="/cart" style={{ textDecoration: 'none' }}>
               <div style={{
-                background: 'linear-gradient(135deg,#c49040,#8a5f1e)',
+                background: 'linear-gradient(135deg,#e2a855,#a26b1f)',
                 borderRadius: 16, padding: '14px 18px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 boxShadow: '0 8px 32px rgba(196,144,64,0.35)',
@@ -503,7 +505,7 @@ export default function MenuPage() {
         @keyframes menuPulse {
           0%,100% { opacity: 0.4; } 50% { opacity: 0.8; }
         }
-        input::placeholder { color: rgba(255,255,255,0.25); }
+        input::placeholder { color: rgba(var(--foreground-rgb),0.35); }
         * { -webkit-tap-highlight-color: transparent; }
       `}</style>
     </div>

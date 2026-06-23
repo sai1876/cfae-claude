@@ -11,11 +11,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    if (!adminDb || !adminAuth) {
+    const db = adminDb;
+    const auth = adminAuth;
+    if (!db || !auth) {
       throw new Error("Firebase Admin not configured");
     }
 
-    const staffSnap = await adminDb.collection('staff').get();
+    const staffSnap = await db.collection('staff').get();
     const now = Date.now();
 
     const transferPromises = staffSnap.docs.map(async (doc) => {
@@ -28,7 +30,7 @@ export async function GET(request: Request) {
         // 1. Update Auth Claims
         if (staff.email) {
           try {
-            await adminAuth.setCustomUserClaims(staff.id, {
+            await auth.setCustomUserClaims(staff.id, {
               role: staff.role,
               outlet: targetOutlet
             });
@@ -43,7 +45,7 @@ export async function GET(request: Request) {
         updatedStaff.outlet = targetOutlet;
         delete updatedStaff.pending_transfer;
 
-        await adminDb.collection('staff').doc(staff.id).set(updatedStaff);
+        await db.collection('staff').doc(staff.id).set(updatedStaff);
         
         console.log(`Processed transfer for ${staff.name} to ${targetOutlet}`);
         return 1;
@@ -52,7 +54,7 @@ export async function GET(request: Request) {
     });
 
     const results = await Promise.all(transferPromises);
-    const processedCount = results.reduce((sum, count) => sum + count, 0);
+    const processedCount = results.reduce((sum: number, count) => sum + count, 0);
 
     return NextResponse.json({ success: true, processed: processedCount });
 

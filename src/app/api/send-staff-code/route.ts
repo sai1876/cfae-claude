@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const result = staffRequestSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ success: false, error: 'Invalid input data', details: result.error.errors }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid input data', details: result.error.issues }, { status: 400 });
     }
 
     const { action, otp, name, role, outlet, passcode, employeeId } = result.data;
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       </html>`;
     } else {
       const isOwner = role === 'owner';
-      const roleTitle = isOwner ? 'Owner / Master Admin' : role.charAt(0).toUpperCase() + role.slice(1);
+      const roleTitle = isOwner ? 'Owner / Master Admin' : (role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Staff');
       subject = `Terminal Access Code: ${name} (${roleTitle})`;
       htmlTemplate = `
       <!DOCTYPE html>
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: `"Terminal Security" <${smtpUser}>`,
-      to: ownerEmail,
+      to: targetEmail,
       subject,
       html: htmlTemplate,
     });

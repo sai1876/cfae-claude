@@ -63,7 +63,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
           step: 0,
           percent: 15,
           title: 'Order Confirmed',
-          icon: <ShoppingBag className="text-[#d4a354]" size={20} />,
+          icon: <ShoppingBag className="text-[var(--primary)]" size={20} />,
           desc: 'Your order request has been received. Queueing at prep station...',
         };
       case 'accepted':
@@ -148,11 +148,11 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
           }`}></span>
         </span>
 
-        <span style={{ color: '#d4a354', fontFamily: 'monospace', fontWeight: 'bold', fontSize: 13, letterSpacing: '0.05em' }}>
+        <span style={{ color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: 13, letterSpacing: '0.05em' }}>
           #{activeOrder.order_type === 'delivery' ? activeOrder.order_id : activeOrder.token_number}
         </span>
         <div style={{ width: '1.5px', height: '12px', background: 'rgba(212,163,84,0.2)' }} />
-        <span style={{ color: '#f7dec4', fontSize: 11, textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.05em' }}>
+        <span style={{ color: 'var(--foreground)', fontSize: 11, textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.05em' }}>
           {activeOrder.status === 'out_for_delivery' ? 'On The Way' : activeOrder.status === 'ready' ? 'Ready!' : 'Preparing'}
         </span>
       </motion.button>
@@ -168,7 +168,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-[#060403]/80 backdrop-blur-md"
+              className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-md"
             />
 
             {/* Modal Body Container */}
@@ -179,18 +179,18 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
               transition={{ duration: 0.2 }}
               className="relative w-full max-w-[450px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl z-10"
               style={{
-                background: 'linear-gradient(160deg, #0e0b07 0%, #171109 100%)',
+                background: 'linear-gradient(160deg, var(--background) 0%, var(--surface-dim) 100%)',
                 border: '1px solid rgba(212, 163, 84, 0.2)',
                 boxShadow: '0 30px 80px rgba(0, 0, 0, 0.8)',
               }}
             >
               {/* Top Banner Accent */}
-              <div style={{ height: 6, background: 'linear-gradient(90deg, #d4a354, #8a5f1e, #f59e0b)' }} />
+              <div style={{ height: 6, background: 'linear-gradient(90deg, var(--primary), #8a5f1e, #f59e0b)' }} />
 
               {/* Close Button */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-rgba(255,255,255,0.4) hover:text-[#d4a354] p-1.5 rounded-full hover:bg-white/5 transition-all"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-[var(--primary)] p-1.5 rounded-full hover:bg-foreground/5 transition-all"
                 style={{ cursor: 'pointer' }}
               >
                 <X size={18} />
@@ -199,17 +199,17 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
               <div className="p-6">
                 {/* Header info */}
                 <div className="flex items-center gap-4 mb-6">
-                  <div className={`h-14 rounded-2xl bg-[#d4a354]/10 border border-[#d4a354]/30 flex items-center justify-center font-mono font-black text-[#d4a354] shadow-[0_0_15px_rgba(212,163,84,0.1)] ${
+                  <div className={`h-14 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/30 flex items-center justify-center font-mono font-black text-[var(--primary)] shadow-[0_0_15px_rgba(212,163,84,0.1)] ${
                     activeOrder.order_type === 'delivery' ? 'px-4 text-sm' : 'w-14 text-2xl'
                   }`}>
                     #{activeOrder.order_type === 'delivery' ? activeOrder.order_id : activeOrder.token_number}
                   </div>
                   <div>
-                    <span className="font-mono text-[9px] tracking-widest uppercase text-white/40 block">Active Order Tracker</span>
-                    <h3 className="font-serif italic text-xl text-[#f7dec4] mt-0.5">{statusInfo.title}</h3>
+                    <span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground block">Active Order Tracker</span>
+                    <h3 className="font-serif italic text-xl text-[var(--foreground)] mt-0.5">{statusInfo.title}</h3>
                   </div>
                   <div className="ml-auto">
-                    <span className="font-mono text-[10px] uppercase text-[#d4a354] bg-[#d4a354]/10 px-3.5 py-1.5 rounded-full border border-[#d4a354]/20 font-bold tracking-wider">
+                    <span className="font-mono text-[10px] uppercase text-[var(--primary)] bg-[var(--primary)]/10 px-3.5 py-1.5 rounded-full border border-[var(--primary)]/20 font-bold tracking-wider">
                       {activeOrder.order_type}
                     </span>
                   </div>
@@ -222,7 +222,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                       initial={{ width: 0 }}
                       animate={{ width: `${statusInfo.percent}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-[#d4a354] to-amber-400 shadow-[0_0_10px_rgba(212,163,84,0.5)] absolute left-0 top-0"
+                      className="h-full bg-gradient-to-r from-[var(--primary)] to-amber-400 shadow-[0_0_10px_rgba(212,163,84,0.5)] absolute left-0 top-0"
                     />
                   </div>
                   
@@ -236,17 +236,17 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                         <div key={name} className="flex flex-col items-center z-10">
                           <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
                             isCurrent
-                              ? 'bg-[#d4a354] border-[#d4a354] text-[#1b1208] shadow-[0_0_15px_rgba(212,163,84,0.4)]'
+                              ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_0_15px_rgba(212,163,84,0.4)]'
                               : isActive
-                              ? 'bg-[#0e0b07] border-[#d4a354] text-[#d4a354]'
-                              : 'bg-[#171109] border-white/10 text-white/20'
+                              ? 'bg-[var(--background)] border-[var(--primary)] text-[var(--primary)]'
+                              : 'bg-[var(--surface-dim)] border-border text-muted-foreground/30'
                           }`}>
                             {idx === 0 && '🛒'}
                             {idx === 1 && '🔥'}
                             {idx === 2 && (activeOrder.order_type === 'delivery' ? '🚴' : '🥤')}
                           </div>
                           <span className={`text-[9px] font-mono uppercase tracking-widest mt-2 ${
-                            isCurrent ? 'text-[#d4a354] font-bold' : 'text-white/40'
+                            isCurrent ? 'text-[var(--primary)] font-bold' : 'text-muted-foreground'
                           }`}>
                             {name}
                           </span>
@@ -264,9 +264,9 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
 
                 {/* OTP block for delivery orders */}
                 {activeOrder.order_type === 'delivery' && activeOrder.otp && (
-                  <div className="bg-[#d4a354]/5 border border-[#d4a354]/20 p-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center mb-6">
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">Delivery Verification OTP</span>
-                    <span className="font-mono text-3xl font-black tracking-[0.25em] text-[#d4a354] pl-[0.25em]">{activeOrder.otp}</span>
+                  <div className="bg-[var(--primary)]/5 border border-[var(--primary)]/20 p-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center mb-6">
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Delivery Verification OTP</span>
+                    <span className="font-mono text-3xl font-black tracking-[0.25em] text-[var(--primary)] pl-[0.25em]">{activeOrder.otp}</span>
                     <p className="text-[11px] text-white/60">Share this code with your delivery partner to verify your order.</p>
                   </div>
                 )}
@@ -275,7 +275,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                 {activeOrder.order_type === 'delivery' && activeOrder.status === 'out_for_delivery' && (
                   <div className="mb-6">
                     <CustomerDeliveryMap 
-                      orderId={activeOrder.id}
+                      orderId={activeOrder.order_id}
                       riderLocation={riderLocation} 
                       deliveryLocation={activeOrder.delivery_coordinates} 
                     />
@@ -284,13 +284,13 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
 
                 {/* Checklist / Order Items */}
                 <div className="space-y-3 mb-6">
-                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-white/40">Your Escape Pack</h4>
+                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Your Escape Pack</h4>
                   <div className="max-h-[160px] overflow-y-auto no-scrollbar space-y-2 pr-1">
                     {activeOrder.items.map((item) => (
                       <div key={item.item_id} className="flex items-center justify-between p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] text-xs">
                         <div className="flex-1 pr-3">
-                          <span className="text-[#f7dec4] font-medium">{item.name}</span>
-                          <span className="text-[#d4a354] font-mono font-bold ml-2">×{item.quantity}</span>
+                          <span className="text-[var(--foreground)] font-medium">{item.name}</span>
+                          <span className="text-[var(--primary)] font-mono font-bold ml-2">×{item.quantity}</span>
                           {item.modifiers && item.modifiers.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {item.modifiers.map((mod) => (
@@ -328,9 +328,9 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                 {/* Hand-off counter/address point */}
                 {activeOrder.order_type === 'delivery' && activeOrder.delivery_address && (
                   <div className="flex flex-col gap-1.5 border-t border-white/5 pt-4">
-                    <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Rider Coordinate Address</span>
+                    <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Rider Coordinate Address</span>
                     <div className="flex gap-2 items-start text-xs text-white/80">
-                      <MapPin size={14} className="text-[#d4a354] shrink-0 mt-0.5" />
+                      <MapPin size={14} className="text-[var(--primary)] shrink-0 mt-0.5" />
                       <span>
                         {typeof activeOrder.delivery_address === 'string'
                           ? activeOrder.delivery_address
@@ -345,17 +345,17 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
 
                 {activeOrder.order_type !== 'delivery' && activeOrder.hatch && (
                   <div className="flex justify-between items-center text-xs font-mono border-t border-white/5 pt-4">
-                    <span className="text-white/40 uppercase tracking-widest text-[9px]">Hand-off Point</span>
-                    <span className="text-[#d4a354] font-bold uppercase">{activeOrder.hatch} Hatch</span>
+                    <span className="text-muted-foreground uppercase tracking-widest text-[9px]">Hand-off Point</span>
+                    <span className="text-[var(--primary)] font-bold uppercase">{activeOrder.hatch} Hatch</span>
                   </div>
                 )}
 
                 {/* Confirm tracking button */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-full mt-6 py-3.5 rounded-xl font-mono text-xs uppercase tracking-widest font-bold text-[#1b1208] transition-all"
+                  className="w-full mt-6 py-3.5 rounded-xl font-mono text-xs uppercase tracking-widest font-bold text-[var(--primary-foreground)] transition-all"
                   style={{
-                    background: 'linear-gradient(135deg, #d4a354 0%, #a07830 100%)',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, #a07830 100%)',
                     cursor: 'pointer',
                     boxShadow: '0 4px 14px rgba(212, 163, 84, 0.3)',
                   }}

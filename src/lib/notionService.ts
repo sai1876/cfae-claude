@@ -20,7 +20,7 @@ export async function syncCustomerToNotion(data: {
 
   try {
     // 1. Check if customer already exists by Phone
-    const existing = await notion.databases.query({
+    const existing = await (notion as any).databases.query({
       database_id: process.env.NOTION_CUSTOMERS_DB_ID,
       filter: {
         property: 'Phone',

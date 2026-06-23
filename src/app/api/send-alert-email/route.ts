@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const result = emailRequestSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ success: false, error: 'Invalid input data', details: result.error.errors }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid input data', details: result.error.issues }, { status: 400 });
     }
 
     const { ingredient, current, threshold, unit, outletName, ownerEmail: bodyOwnerEmail, weatherContext, aiSuggestedRefill, aiReasoning } = result.data;

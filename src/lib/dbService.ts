@@ -769,7 +769,7 @@ export const deductIngredientsForOrder = async (orderId: string): Promise<void> 
   };
 
   // 1. Pre-fetch all unique menu items
-  const uniqueMenuItemIds = [...new Set(items.map((item: any) => item.menu_item_id).filter(Boolean))];
+  const uniqueMenuItemIds = [...new Set<string>(items.map((item: any) => item.menu_item_id).filter(Boolean))];
   const menuFetchPromises = uniqueMenuItemIds.map(id => getDoc(doc(db, MENU_COL, id)));
   const menuSnaps = await Promise.all(menuFetchPromises);
   
@@ -882,7 +882,7 @@ export const refundIngredientsForOrder = async (orderId: string): Promise<void> 
   };
 
   // 1. Pre-fetch all unique menu items
-  const uniqueMenuItemIds = [...new Set(items.map((item: any) => item.menu_item_id).filter(Boolean))];
+  const uniqueMenuItemIds = [...new Set<string>(items.map((item: any) => item.menu_item_id).filter(Boolean))];
   const menuFetchPromises = uniqueMenuItemIds.map(id => getDoc(doc(db, MENU_COL, id)));
   const menuSnaps = await Promise.all(menuFetchPromises);
   

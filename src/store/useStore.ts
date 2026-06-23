@@ -23,7 +23,7 @@ interface AppState {
   setCustomerOutlet: (outlet: string) => void;
   
   // UI Theme (Weather / Occasion driven)
-  theme: 'default' | 'scorching' | 'raining' | 'night' | 'exam' | 'fest' | 'valentines';
+  theme: 'default' | 'scorching' | 'raining' | 'night' | 'exam' | 'fest' | 'valentines' | 'custom';
   setTheme: (theme: AppState['theme']) => void;
 
   // Category filter state

@@ -10,7 +10,7 @@ import distance from '@turf/distance';
 interface CustomerDeliveryMapProps {
   orderId: string;
   riderLocation?: { lat: number; lng: number };
-  deliveryLocation: { lat: number; lng: number };
+  deliveryLocation?: { lat: number; lng: number };
 }
 
 // Icons
@@ -67,9 +67,9 @@ export default function CustomerDeliveryMap({ orderId, riderLocation, deliveryLo
     fetchQueue();
   }, [orderId]);
 
-  // 2. Fetch OSRM Route ONCE when we have the rider's first location + waypoints
   useEffect(() => {
-    if (!riderLocation || fetchedRoute.current) return;
+    if (!riderLocation || !deliveryLocation || fetchedRoute.current) return;
+    const dest = deliveryLocation;
 
     async function fetchOsrm() {
       try {
@@ -77,7 +77,7 @@ export default function CustomerDeliveryMap({ orderId, riderLocation, deliveryLo
         const points = [
           [riderLocation!.lng, riderLocation!.lat],
           ...waypoints.map(w => [w.lng, w.lat]),
-          [deliveryLocation.lng, deliveryLocation.lat]
+          [dest.lng, dest.lat]
         ];
 
         const coordString = points.map(p => `${p[0]},${p[1]}`).join(';');
@@ -111,13 +111,13 @@ export default function CustomerDeliveryMap({ orderId, riderLocation, deliveryLo
         const rPt = point([riderLocation.lng, riderLocation.lat]);
         const rLine = lineString(routeCoordinates);
         
-        // If rider deviates more than 200 meters, disable snap to avoid weird UX
-        const dist = distance(rPt, rLine, { units: 'kilometers' });
+        // Find nearest point and get distance (dist is in properties in kilometers)
+        const snapped = nearestPointOnLine(rLine, rPt, { units: 'kilometers' });
+        const dist = snapped.properties.dist ?? 0;
         
         if (dist > 0.2) {
           setSnappedRider(riderLocation); // Raw fallback
         } else {
-          const snapped = nearestPointOnLine(rLine, rPt);
           // Snap returns [lng, lat]
           setSnappedRider({ lat: snapped.geometry.coordinates[1], lng: snapped.geometry.coordinates[0] });
         }

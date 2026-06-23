@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CinematicScroller from '@/components/customer/CinematicScroller';
 import DynamicSliderHero from '@/components/customer/DynamicSliderHero';
 import OrderTracker from '@/components/customer/OrderTracker';
@@ -14,7 +14,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function CustomerLandingPage() {
   const [showMainPage, setShowMainPage] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasSeenIntro = sessionStorage.getItem('Hau Hau-intro-seen');
+      if (hasSeenIntro) {
+        setShowMainPage(true);
+        window.dispatchEvent(new CustomEvent('Hau Hau-enter-menu'));
+      }
+    }
+  }, []);
+
   const handleComplete = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('Hau Hau-intro-seen', 'true');
+    }
     setShowMainPage(true);
     // Dispatch event to show Layout top/bottom bars
     if (typeof window !== 'undefined') {

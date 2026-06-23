@@ -13,6 +13,48 @@ import crypto from 'crypto';
 // Verify token from environment or fallback
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'HauHauVoiceOrderVerifyToken2026';
 
+function getPhoneVariations(phone: string): string[] {
+  const digits = phone.replace(/[^0-9]/g, "");
+  const variations = new Set<string>([digits, `+${digits}`]);
+  
+  if (digits.length > 10) {
+    const last10 = digits.slice(-10);
+    variations.add(last10);
+    variations.add(`+${last10}`);
+    variations.add(`+91${last10}`);
+    variations.add(`91${last10}`);
+  } else if (digits.length === 10) {
+    variations.add(`+${digits}`);
+    variations.add(`+91${digits}`);
+    variations.add(`91${digits}`);
+  }
+  
+  return Array.from(variations);
+}
+
+async function findUserByPhone(
+  usersRef: admin.firestore.CollectionReference,
+  phone: string
+): Promise<admin.firestore.DocumentSnapshot | null> {
+  const variations = getPhoneVariations(phone);
+  console.log(`[USER LOOKUP] Searching for phone variations:`, variations);
+  
+  // 1. Try querying 'phone' field
+  const queryPhone = await usersRef.where('phone', 'in', variations).limit(1).get();
+  if (!queryPhone.empty) {
+    return queryPhone.docs[0];
+  }
+  
+  // 2. Try querying 'phone_number' field
+  const queryPhoneNumber = await usersRef.where('phone_number', 'in', variations).limit(1).get();
+  if (!queryPhoneNumber.empty) {
+    return queryPhoneNumber.docs[0];
+  }
+  
+  return null;
+}
+
+
 /**
  * GET - WhatsApp Webhook Verification
  */
@@ -58,6 +100,20 @@ export async function POST(request: Request) {
     const fromPhone = message.from; // e.g. "919876543210"
     const normalizedFromPhone = fromPhone.replace(/[^0-9]/g, "");
 
+    const messageId = message.id;
+    if (messageId) {
+      const dupRef = adminDb.collection('processed_whatsapp_messages').doc(messageId);
+      const dupSnap = await dupRef.get();
+      if (dupSnap.exists) {
+        console.log(`[WHATSAPP WEBHOOK] Message ID ${messageId} already processed. Ignoring.`);
+        return NextResponse.json({ success: true, message: 'Duplicate message ignored' });
+      }
+      await dupRef.set({
+        processed_at: admin.firestore.FieldValue.serverTimestamp(),
+        from: fromPhone
+      });
+    }
+
     // ----------------------------------------------------
     // CASE 1: Voice Note Order Payload (.ogg audio)
     // ----------------------------------------------------
@@ -67,29 +123,7 @@ export async function POST(request: Request) {
 
       // --- Gate A: Phone Authentication Lookup (FAST CHECK) ---
       const usersRef = adminDb.collection('users');
-      let userDoc: any = null;
-
-      // Check variations of phone numbers in Firestore
-      const queryPhoneDirect = await usersRef.where('phone', '==', normalizedFromPhone).get();
-      if (!queryPhoneDirect.empty) {
-        userDoc = queryPhoneDirect.docs[0];
-      } else {
-        const queryPhonePlus = await usersRef.where('phone', '==', `+${normalizedFromPhone}`).get();
-        if (!queryPhonePlus.empty) {
-          userDoc = queryPhonePlus.docs[0];
-        } else if (normalizedFromPhone.length > 10) {
-          const localDigits = normalizedFromPhone.slice(-10);
-          const queryPhoneSuffix = await usersRef.where('phone', '==', localDigits).get();
-          if (!queryPhoneSuffix.empty) {
-            userDoc = queryPhoneSuffix.docs[0];
-          } else {
-            const queryPhoneSuffixPlus = await usersRef.where('phone', '==', `+91${localDigits}`).get();
-            if (!queryPhoneSuffixPlus.empty) {
-              userDoc = queryPhoneSuffixPlus.docs[0];
-            }
-          }
-        }
-      }
+      const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
 
       if (!userDoc) {
         console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${fromPhone} not registered.`);
@@ -102,7 +136,7 @@ export async function POST(request: Request) {
       }
 
       const userData = userDoc.data();
-      const accountStatus = userData.account_status || userData.status || '';
+      const accountStatus = userData?.account_status || userData?.status || '';
       if (accountStatus.toLowerCase() !== 'active') {
         console.warn(`[WHATSAPP WEBHOOK REJECT] User status is ${accountStatus}.`);
         await sendWhatsAppMessage(
@@ -138,6 +172,38 @@ export async function POST(request: Request) {
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Handshake processing failed:', err));
 
         return NextResponse.json({ success: true, message: 'Handshake queued' });
+      } else {
+        // --- Gate A: Phone Authentication Lookup for general chat ---
+        const usersRef = adminDb.collection('users');
+        const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
+
+        if (!userDoc) {
+          console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${fromPhone} not registered.`);
+          await sendWhatsAppMessage(
+            phoneNumberId,
+            fromPhone,
+            "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! 🌟"
+          );
+          return NextResponse.json({ success: true, message: 'Unregistered user aborted' });
+        }
+
+        const userData = userDoc.data();
+        const accountStatus = userData?.account_status || userData?.status || '';
+        if (accountStatus.toLowerCase() !== 'active') {
+          console.warn(`[WHATSAPP WEBHOOK REJECT] User status is ${accountStatus}.`);
+          await sendWhatsAppMessage(
+            phoneNumberId,
+            fromPhone,
+            "Macha! Your account is not active yet. Please verify your email first! 🌟"
+          );
+          return NextResponse.json({ success: true, message: 'Inactive user aborted' });
+        }
+
+        // Trigger background processing for chat message
+        processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText)
+          .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
+
+        return NextResponse.json({ success: true, message: 'Chat message queued' });
       }
     }
 
@@ -345,5 +411,166 @@ async function processTextHandshakeInBackground(
 
   } catch (error) {
     console.error('[BACKGROUND TASK EXCEPTION] Handshake verification error:', error);
+  }
+}
+
+/**
+ * Background Asynchronous Pipeline: handles general chat queries, fetches weather & menu, queries Groq, and replies.
+ */
+async function processGeneralChatInBackground(
+  phoneNumberId: string,
+  fromPhone: string,
+  normalizedFromPhone: string,
+  messageText: string
+) {
+  if (!adminDb) return;
+  console.log(`[BACKGROUND TASK] Starting general chat pipeline for ${fromPhone}`);
+
+  try {
+    // 1. Fetch Coordinates from first outlet in database (fallback to Hyderabad)
+    let lat = 17.3850;
+    let lng = 78.4867;
+    try {
+      const outletsSnap = await adminDb.collection('outlets').limit(1).get();
+      if (!outletsSnap.empty) {
+        const outletData = outletsSnap.docs[0].data();
+        if (outletData.coordinates?.latitude) {
+          lat = outletData.coordinates.latitude;
+          lng = outletData.coordinates.longitude;
+        } else if (outletData.coordinates?.lat) {
+          lat = outletData.coordinates.lat;
+          lng = outletData.coordinates.lng;
+        }
+      }
+    } catch (err) {
+      console.warn('[BACKGROUND CHAT] Failed to fetch outlet coordinates, defaulting:', err);
+    }
+
+    // 2. Fetch current weather from Open-Meteo API
+    let weatherLine = 'Weather unknown.';
+    try {
+      const wRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,apparent_temperature&timezone=auto`
+      );
+      if (wRes.ok) {
+        const wData = await wRes.json();
+        const temp = Math.round(wData.current.temperature_2m);
+        const feels = Math.round(wData.current.apparent_temperature);
+        const code = wData.current.weathercode;
+        let condition = 'clear';
+        if (code === 0) condition = 'sunny and clear';
+        else if (code <= 3) condition = 'partly cloudy';
+        else if (code <= 48) condition = 'foggy';
+        else if (code <= 67) condition = 'rainy';
+        else if (code <= 77) condition = 'snowy';
+        else if (code <= 99) condition = 'thunderstormy';
+        weatherLine = `It's ${temp}°C outside (feels like ${feels}°C) and ${condition}.`;
+      }
+    } catch (err) {
+      console.warn('[BACKGROUND CHAT] Failed to fetch weather:', err);
+    }
+
+    // 3. Fetch active menu catalog
+    const menuSnap = await adminDb.collection('menu').where('is_available', '==', true).get();
+    const menuItems = menuSnap.docs.map(doc => doc.data());
+
+    // 4. Construct prompt with Bhai personality
+    const prompt = 
+      `You are "Bhai" — a final-year student at this college who works part-time at Oasis Cafe, Hyderabad. ` +
+      `Talk like a funny, caring Hyderabadi college senior — mix of Hindi, Telugu slang, and English. ` +
+      `Phrases: "arre yaar", "bhai sun", "sach mein?", "mast plan hai", "pakka set", "lite le lo", "kya scene hai", "machha". ` +
+      `Current Local Weather Context: ${weatherLine}\n` +
+      `Available Menu Items: ${menuItems.map(m => `${m.name} (Price: ₹${m.price}, ID: ${m.item_id})`).join(', ')}\n\n` +
+      `RULES:\n` +
+      `- ALWAYS greet the user starting with "Hi machha! How can I help you?" or "Kya scene hai machha, bol!" followed by a friendly chat.\n` +
+      `- Make sure your mood matches the current weather (e.g. dramatic complaints if hot/sunny, super cozy/happy if rainy/cold, using Hyderabadi slang).\n` +
+      `- Suggest 1 to 3 items from the Available Menu Items list that match the weather (e.g., recommend hot tea/coffee, waffles/brownies if cold/rainy; recommend cold coolers, milkshakes if sunny/hot).\n` +
+      `- Keep your response extremely brief (max 2-3 sentences total).\n\n` +
+      `Return ONLY a raw valid JSON object (no markdown block formatting like \`\`\`json):` +
+      `{"message": "your chat response text here", "suggested_items": ["item_id_1", "item_id_2"]}`;
+
+    // 5. Query LLM via Groq with rotating key fallback
+    const keysStr = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
+    const keys = keysStr.split(',').map(k => k.trim()).filter(Boolean);
+
+    if (keys.length === 0) {
+      throw new Error("GROQ_API_KEY is not configured.");
+    }
+
+    let responseText = '';
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      try {
+        console.log(`[BACKGROUND CHAT] Requesting chat completions (Key index: ${i})...`);
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [
+              { role: 'system', content: prompt },
+              { role: 'user', content: messageText }
+            ],
+            temperature: 0.7,
+            max_tokens: 300,
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (res.status === 429) {
+          console.warn(`[BACKGROUND CHAT RATE LIMIT] Key index ${i} rate limited. Rotating...`);
+          continue;
+        }
+
+        if (!res.ok) {
+          throw new Error(`Groq API error status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        responseText = data.choices[0].message.content;
+        break; // Success
+      } catch (err) {
+        console.error(`[BACKGROUND CHAT ERROR] Key index ${i} failed:`, err);
+      }
+    }
+
+    if (!responseText) {
+      throw new Error("All Groq API keys failed or rate limited.");
+    }
+
+    // 6. Parse JSON response and build reply
+    const parsed = JSON.parse(responseText);
+    let reply = parsed.message || "Bol machha! Kya scene hai?";
+
+    // 7. Append menu items suggestions
+    if (parsed.suggested_items && parsed.suggested_items.length > 0) {
+      let suggestions = '\n\nBhai suggests ordering these comfort items, machha:\n';
+      let count = 0;
+      for (const itemId of parsed.suggested_items) {
+        const item = menuItems.find(m => m.item_id === itemId);
+        if (item) {
+          suggestions += `• ${item.name} (₹${item.price})\n`;
+          count++;
+        }
+      }
+      if (count > 0) {
+        reply += suggestions;
+      }
+    }
+
+    // 8. Send message via WhatsApp
+    await sendWhatsAppMessage(phoneNumberId, fromPhone, reply);
+    console.log(`[BACKGROUND CHAT SUCCESS] Reply sent to ${fromPhone}`);
+
+  } catch (error) {
+    console.error('[BACKGROUND CHAT EXCEPTION] Failed to process general chat:', error);
+    await sendWhatsAppMessage(
+      phoneNumberId,
+      fromPhone,
+      "Kya scene hai machha! Kuch technical issue chal raha backend mein, but overall lite le lo! Bol kya chahiye? 🚀"
+    );
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Sparkles } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
@@ -12,8 +12,29 @@ import {
 import { collection, doc, setDoc, getDocs, getDoc } from 'firebase/firestore';
 import { mockMenuItems, mockUIConfig, defaultSliderItems } from '@/lib/mockData';
 import { getFriendlyErrorMessage } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
+import AuthWorkspace from '@/components/auth/AuthWorkspace';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#060403] text-[#f7dec4] flex items-center justify-center font-mono text-xs uppercase tracking-widest">
+        Loading Command Shield...
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const isStaff = searchParams.get('staff') === 'true';
+
+  if (!isStaff) {
+    return <AuthWorkspace defaultTab="login" />;
+  }
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -425,6 +446,14 @@ export default function LoginPage() {
                 )}
               </>
             )}
+            <div className="text-center mt-2 border-t border-[#302117]/60 pt-4">
+              <a
+                href="/login"
+                className="text-[10px] font-mono uppercase tracking-wider text-[#d4c4b0]/40 hover:text-[#f8bc51] transition-colors"
+              >
+                Customer Portal? Log In / Sign Up
+              </a>
+            </div>
           </div>
           </form>
         )}

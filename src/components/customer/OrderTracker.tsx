@@ -240,7 +240,7 @@ export default function OrderTracker() {
                 {activeOrder.order_type === 'delivery' && activeOrder.status === 'out_for_delivery' && (
                   <div className="mb-4">
                     <CustomerDeliveryMap 
-                      orderId={activeOrder.id}
+                      orderId={activeOrder.order_id}
                       riderLocation={riderLocation} 
                       deliveryLocation={activeOrder.delivery_coordinates} 
                     />

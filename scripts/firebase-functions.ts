@@ -218,7 +218,7 @@ Return raw JSON array: [{"id": "menu_item_id", "qty": number_of_pieces}]`;
 
           let matched: any[] = [];
           try {
-            const geminiModel = ai.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+            const geminiModel = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await geminiModel.generateContent({
               contents: [{ role: 'user', parts: [{ text: prompt }] }],
               generationConfig: { responseMimeType: 'application/json' }

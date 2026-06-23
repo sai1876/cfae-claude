@@ -1,515 +1,539 @@
-import re
 import os
-import secrets
 import time
+import random
+import string
+import requests
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Request, Depends, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, EmailStr
-import httpx
+from pydantic import BaseModel, EmailStr
+from dotenv import load_dotenv
 
 import firebase_admin
-from firebase_admin import credentials, firestore, auth as firebase_auth
-from contextlib import asynccontextmanager
+from firebase_admin import credentials, firestore, auth
 
-# Global httpx AsyncClient to reuse connection pools and avoid socket exhaustion
-http_client = None
+# Load environment variables
+load_dotenv()
+if os.path.exists(".env.local"):
+    load_dotenv(".env.local", override=True)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global http_client
-    http_client = httpx.AsyncClient()
-    yield
-    await http_client.aclose()
-
-app = FastAPI(
-    title="Hau Hau PWA Authentication Command Engine",
-    description="FastAPI Backend for Transactional Onboarding and Dual-Channel Auth Gateways",
-    version="1.0.0",
-    lifespan=lifespan
-)
-
-# Enable CORS for Next.js PWA client
-cors_origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-allowed_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
-if not allowed_origins:
-    allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Initialize Firebase Admin Python SDK
-# If credentials path exists, initialize, otherwise check environment variables
-firebase_cred_path = "./firebase-service-account.json"
-if os.path.exists(firebase_cred_path):
-    cred = credentials.Certificate(firebase_cred_path)
-    firebase_admin.initialize_app(cred)
-else:
+# Initialize Firebase Admin SDK
+firebase_initialized = False
+try:
     project_id = os.environ.get("FIREBASE_PROJECT_ID")
     client_email = os.environ.get("FIREBASE_CLIENT_EMAIL")
     private_key = os.environ.get("FIREBASE_PRIVATE_KEY")
-    if project_id and client_email and private_key:
-        # Handle literal \n in private key
+
+    if private_key:
         private_key = private_key.replace("\\n", "\n")
-        cert_dict = {
+
+    if project_id and client_email and private_key:
+        cred = credentials.Certificate({
             "type": "service_account",
             "project_id": project_id,
             "private_key": private_key,
             "client_email": client_email,
             "token_uri": "https://oauth2.googleapis.com/token",
-        }
-        cred = credentials.Certificate(cert_dict)
+        })
         firebase_admin.initialize_app(cred)
+        firebase_initialized = True
+        print("[FIREBASE] Admin SDK initialized successfully via explicit credentials.")
     else:
-        try:
-            firebase_admin.initialize_app()
-        except Exception:
-            print("Firebase Admin already initialized or missing service account credentials.")
+        # Fallback to default credentials/auto-detect
+        firebase_admin.initialize_app()
+        firebase_initialized = True
+        print("[FIREBASE] Admin SDK initialized via default credentials.")
+except Exception as e:
+    print(f"[FIREBASE ERROR] Failed to initialize Firebase Admin SDK: {e}")
 
-db = firestore.client()
+db = firestore.client() if firebase_initialized else None
 
-# Firebase API Key for Auth REST REST operations (verify passwords)
-FIREBASE_API_KEY = os.environ.get("NEXT_PUBLIC_FIREBASE_API_KEY", "mock_firebase_key")
+app = FastAPI(
+    title="Hau Hau Auth Engine",
+    description="Dual-Channel Authentication Gateway for Hau Hau Portal",
+    version="1.0.0"
+)
 
-# ----------------------------------------------------
-# PYDANTIC INPUT/OUTPUT SCHEMAS
-# ----------------------------------------------------
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- REQUEST SCHEMAS ---
+
 class PhoneCheckRequest(BaseModel):
-    phone: str = Field(..., description="International format or local 10-digit number")
+    phone: str
 
-class WhatsAppHandshakeRequest(BaseModel):
-    phone: str = Field(..., description="Sanitized phone number to verify")
+class HandshakeRequest(BaseModel):
+    phone: str
 
 class RegisterRequest(BaseModel):
-    phone: str = Field(..., description="Validated phone number (ID for user doc)")
-    name: str = Field(..., min_length=1, description="Full Name")
-    email: EmailStr = Field(..., description="Unique student email address")
-    password: str = Field(..., min_length=6, description="User password (min 6 chars)")
-    referral_code: Optional[str] = Field(None, description="Optional referral code")
+    phone: str
+    name: str
+    email: EmailStr
+    password: str
+    referral_code: Optional[str] = None
 
 class LoginRequest(BaseModel):
-    phone: str = Field(..., description="User registered phone number")
-    password: str = Field(..., description="Permanent account password")
+    phone: str
+    password: str
 
-class PasswordlessLoginRequest(BaseModel):
-    phone: str = Field(..., description="User registered phone number")
+# --- HELPER FUNCTIONS ---
 
-
-# ----------------------------------------------------
-# WEBHOOK MESSAGE PARSING SCHEMA
-# ----------------------------------------------------
-class WhatsAppWebhookPayload(BaseModel):
-    object: str
-    entry: list
-
-# Helper to normalize phones to digits only
 def normalize_phone(phone: str) -> str:
-    return re.sub(r"[^0-9]", "", phone)
+    """Normalize phone number to digits only."""
+    return "".join([c for c in phone if c.isdigit()])
 
-# ----------------------------------------------------
-# API ENDPOINTS
-# ----------------------------------------------------
+def get_phone_variations(phone: str) -> list[str]:
+    """Generate potential variations of a phone number saved in DB."""
+    digits = normalize_phone(phone)
+    variations = {digits, f"+{digits}"}
+    if len(digits) > 10:
+        last_10 = digits[-10:]
+        variations.add(last_10)
+        variations.add(f"+91{last_10}")
+        variations.add(f"91{last_10}")
+    elif len(digits) == 10:
+        variations.add(f"+91{digits}")
+        variations.add(f"91{digits}")
+    return list(variations)
+
+def find_user_by_phone(phone: str):
+    """Query Firestore for user matching phone number variations."""
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database service unavailable."
+        )
+    
+    variations = get_phone_variations(phone)
+    users_ref = db.collection("users")
+    
+    # Try querying phone_number field first
+    query1 = users_ref.where("phone_number", "in", variations).limit(1).get()
+    if query1:
+        return query1[0]
+        
+    # Fallback to phone field check
+    query2 = users_ref.where("phone", "in", variations).limit(1).get()
+    if query2:
+        return query2[0]
+        
+    return None
+
+# --- ENDPOINTS ---
+
+@app.get("/")
+def read_root():
+    return {
+        "status": "online",
+        "service": "Hau Hau Auth Gateway",
+        "firebase_connected": firebase_initialized
+    }
 
 @app.post("/api/auth/check-phone")
-def check_phone_availability(payload: PhoneCheckRequest):
+def check_phone(payload: PhoneCheckRequest):
     """
-    Phase 1: Initial Phone Boundary Check
-    If the phone number exists inside the users collection, reject registration.
+    Checks if a phone number is registered.
+    Returns 200 OK if unique, otherwise raises 400 Bad Request.
     """
-    sanitized_phone = normalize_phone(payload.phone)
-    if not sanitized_phone:
-        raise HTTPException(status_code=400, detail="Invalid phone number format.")
-
-    user_ref = db.collection("users").document(sanitized_phone)
-    user_snap = user_ref.get()
-
-    if user_snap.exists:
+    if not db:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This phone number is already linked to an active account."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
         )
-
-    return {"success": True, "message": "Phone number is available."}
-
+    
+    user_doc = find_user_by_phone(payload.phone)
+    if user_doc:
+        user_data = user_doc.to_dict()
+        is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+        
+        if is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This phone number is already linked to an active account."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This phone number is registered but inactive. Please log in to verify your profile."
+            )
+            
+    return {"status": "available", "message": "Phone number is unique and available."}
 
 @app.post("/api/auth/whatsapp-handshake")
-def generate_whatsapp_handshake(payload: WhatsAppHandshakeRequest):
+def whatsapp_handshake(payload: HandshakeRequest):
     """
-    Phase 2: Transient Handshake generation.
-    Generates an 8-character uppercase tracking token valid for 10 minutes.
+    Generates a transient 8-character token for WhatsApp signup verification
+    and provides the redirect/QR trigger URL.
     """
-    sanitized_phone = normalize_phone(payload.phone)
-    if not sanitized_phone:
-        raise HTTPException(status_code=400, detail="Invalid phone number.")
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
+        )
+        
+    normalized = normalize_phone(payload.phone)
+    if not normalized or len(normalized) < 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number format."
+        )
 
-    # Check if number already registered
-    user_ref = db.collection("users").document(sanitized_phone)
-    if user_ref.get().exists:
-        raise HTTPException(status_code=400, detail="Phone number already registered.")
-
-    # Generate 8-character transient uppercase token
-    token = "".join(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8))
+    # Generate a secure 8-character uppercase alphanumeric verification token
+    token = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
     
-    # Store token details in Firestore transient collection
-    now = int(time.time())
-    handshake_ref = db.collection("auth_handshakes").document(token)
-    handshake_ref.set({
-        "phone": sanitized_phone,
+    # Expiry set to 10 minutes in the future
+    expires_at = int(time.time() * 1000) + (10 * 60 * 1000)
+    
+    # Store token details in Firestore auth_handshakes collection
+    db.collection("auth_handshakes").document(token).set({
+        "phone": normalized,
         "is_verified": False,
-        "created_at": now,
-        "expires_at": now + (10 * 60) # 10 minutes TTL
+        "created_at": int(time.time() * 1000),
+        "expires_at": expires_at,
+        "verified_at": None
     })
-
-    # Compile the pre-filled WhatsApp conversational deep link
-    bot_number = os.environ.get("WHATSAPP_BOT_NUMBER", "YOUR_BOT_NUMBER")
-    prefilled_text = f"Hey Hau Hau! 🌟\n\nPlease verify my new signup session.\n\nRef: {token}"
-    encoded_text = httpx.utils.quote(prefilled_text)
-    wa_link = f"https://wa.me/{bot_number}?text={encoded_text}"
-
+    
+    # Retrieve bot number from env or fallback to Meta sandbox default
+    bot_raw = os.environ.get("WHATSAPP_BOT_NUMBER") or os.environ.get("NEXT_PUBLIC_WHATSAPP_BOT_NUMBER") or "15550553733"
+    bot_number = normalize_phone(bot_raw)
+    
+    # Format wa.me redirect link
+    redirect_text = f"Hey Hau Hau! 🌟\n\nPlease verify my new signup session.\n\nRef: {token}"
+    encoded_text = requests.utils.quote(redirect_text)
+    redirect_url = f"https://wa.me/{bot_number}?text={encoded_text}"
+    
     return {
-        "success": True,
         "token": token,
-        "redirect_url": wa_link
+        "redirect_url": redirect_url,
+        "expires_in_seconds": 600
     }
-
 
 @app.get("/api/auth/poll-status/{token}")
-def poll_handshake_status(token: str):
+def poll_status(token: str):
     """
-    Phase 3: Active background polling.
-    Checks if the user has successfully sent the WhatsApp message matching the Ref token.
+    Client polls this endpoint to check if the WhatsApp verification message has been completed.
     """
-    handshake_ref = db.collection("auth_handshakes").document(token.upper())
-    handshake_snap = handshake_ref.get()
-
-    if not handshake_snap.exists:
-        raise HTTPException(status_code=404, detail="Handshake session not found.")
-
-    data = handshake_snap.to_dict()
-    if int(time.time()) > data["expires_at"]:
-        raise HTTPException(status_code=410, detail="Handshake session expired. Please retry.")
-
-    return {
-        "success": True,
-        "token": token,
-        "is_phone_verified": data["is_verified"]
-    }
-
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
+        )
+        
+    handshake_ref = db.collection("auth_handshakes").document(token.upper()).get()
+    if not handshake_ref.exists:
+        return {"is_phone_verified": False, "error": "Handshake token not found."}
+        
+    data = handshake_ref.to_dict()
+    expires_at = data.get("expires_at", 0)
+    
+    if int(time.time() * 1000) > expires_at:
+        return {"is_phone_verified": False, "error": "Handshake token expired."}
+        
+    return {"is_phone_verified": data.get("is_verified", False)}
 
 @app.post("/api/auth/register")
-def register_student_profile(payload: RegisterRequest):
+def register(payload: RegisterRequest):
     """
-    Phase 4 & 5: Profile Data Validation, Atomic Account Staging and Lockout.
+    Atomic Signup: creates a disabled Firebase Auth user, stages the user profile in Firestore
+    with is_active: False, and generates/sends an email verification link.
     """
-    sanitized_phone = normalize_phone(payload.phone)
-    sanitized_email = payload.email.strip().lower()
-
-    # 1. Check if email is already in use in Firebase Auth
-    try:
-        firebase_auth.get_user_by_email(sanitized_email)
+    if not db:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This email address is already linked to another account."
-        )
-    except firebase_auth.UserNotFoundError:
-        pass # Email is available in Auth Auth
-
-    # 2. Check if email is already in Firestore via transactional query
-    email_query = db.collection("users").where("email", "==", sanitized_email).limit(1).get()
-    if len(email_query) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This email address is already linked to another account."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
         )
 
-    # 3. Firestore Transaction to confirm 1:1 uniqueness and insert staging profile
-    transaction = db.transaction()
+    normalized = normalize_phone(payload.phone)
 
-    @firestore.transactional
-    def execute_registration_transaction(transaction, phone, email, name, ref_code):
-        user_ref = db.collection("users").document(phone)
-        snapshot = user_ref.get(transaction=transaction)
+    # Double check phone uniqueness
+    existing_user = find_user_by_phone(normalized)
+    if existing_user:
+        user_data = existing_user.to_dict()
+        if user_data.get("is_active", False) or user_data.get("status") == "active":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This phone number is already registered to an active account."
+            )
+        else:
+            # Clean up old inactive Auth and Firestore user to allow re-registration
+            try:
+                auth.delete_user(existing_user.id)
+            except Exception as e:
+                print(f"[REGISTER CLEANUP] Failed to delete old Auth user {existing_user.id}: {e}")
+            try:
+                db.collection("users").document(existing_user.id).delete()
+            except Exception as e:
+                print(f"[REGISTER CLEANUP] Failed to delete old Firestore doc: {e}")
 
-        if snapshot.exists:
-            return False
-
-        # Set staging values (is_active = False, is_email_verified = False)
-        new_profile = {
-            "phone_number": phone,
-            "phone": phone, # duplicate reference for query compatibility
-            "name": name,
-            "email": email,
-            "student_email": email,
-            "points": 100, # welcome bonus
-            "created_at": int(time.time() * 1000),
-            "referral_used": ref_code or "",
-            "is_email_verified": False,
-            "is_active": False,
-            "account_status": "inactive"
-        }
-        transaction.set(user_ref, new_profile)
-        return new_profile
-
-    # Execute database registration transaction
-    tx_result = execute_registration_transaction(transaction, sanitized_phone, sanitized_email, payload.name, payload.referral_code)
-    if tx_result is False:
-        raise HTTPException(status_code=400, detail="Phone number already registered.")
-
-    # 4. Provision credential record in Firebase Auth
-    user_record = None
     try:
-        user_record = firebase_auth.create_user(
-            email=sanitized_email,
+        # Create Firebase Auth user disabled by default
+        auth_user = auth.create_user(
+            email=payload.email,
             password=payload.password,
             display_name=payload.name,
-            disabled=True # Keep disabled in Firebase Auth until email verified
+            disabled=True
         )
-        
-        # Link Firebase UID to Firestore document by updating uid mapping
-        db.collection("users").document(sanitized_phone).update({
-            "user_id": user_record.uid
-        })
-
-        # 5. Generate and send verification email link
-        verify_link = firebase_auth.generate_email_verification_link(sanitized_email)
-        
-        # In a real environment, you would use a mail service.
-        # For this integration, we log the link to stdout and return it for verification.
-        print(f"[AUTH EMAIL GATEWAY] Verification link sent to {sanitized_email}: {verify_link}")
-
-        return {
-            "success": True,
-            "message": "Verification Link Sent. Please check your campus inbox to activate your profile.",
-            "uid": user_record.uid,
-            "dev_verify_link": verify_link  # Returned for developer convenience
-        }
+        uid = auth_user.uid
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email address is already linked to another account."
+        )
     except Exception as e:
-        # Rollback Firestore document if Auth creation or document update fails
-        db.collection("users").document(sanitized_phone).delete()
-        # Rollback Firebase Auth user if it was created
-        if user_record:
-            try:
-                firebase_auth.delete_user(user_record.uid)
-                print(f"[ROLLBACK] Cleaned up orphaned Auth user {user_record.uid} from Firebase Auth.")
-            except Exception as auth_err:
-                print(f"[ROLLBACK ERROR] Failed to delete orphaned Auth user: {auth_err}")
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+        print(f"[REGISTER ERROR] Auth user creation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Registration failed: {str(e)}"
+        )
 
-
-@app.post("/webhook")
-async def inbound_whatsapp_webhook(request: Request):
-    """
-    Zero-Cost WhatsApp Handshake webhook receiver.
-    Listens for student text messages or voice messages.
-    """
     try:
-        payload = await request.json()
-        entry = payload.get("entry", [{}])[0]
-        change = entry.get("changes", [{}])[0]
-        value = change.get("value", {})
-        message = value.get("messages", [{}])[0]
-
-        if not message:
-            return {"success": True, "message": "Echo/Status ignored"}
-
-        from_phone = normalize_phone(message.get("from", ""))
-        message_body = message.get("text", {}).get("body", "")
-
-        # Verify Signup Token Handshake (e.g. Ref: H4U7B1X9)
-        token_match = re.search(r"Ref:\s*([A-Z0-9]{8})\s*$", message_body, re.IGNORECASE)
-        if token_match:
-            token = token_match.group(1).upper()
-            handshake_ref = db.collection("auth_handshakes").document(token)
-            handshake_snap = handshake_ref.get()
-
-            if handshake_snap.exists:
-                data = handshake_snap.to_dict()
-                registered_phone = normalize_phone(data["phone"])
-                
-                # Suffix check to enforce identity matches (last 10 digits)
-                if from_phone[-10:] == registered_phone[-10:]:
-                    if int(time.time()) <= data["expires_at"]:
-                        handshake_ref.update({
-                            "is_verified": True,
-                            "verified_at": int(time.time())
-                        })
-                        print(f"[WEBHOOK SUCCESS] Token {token} verified successfully.")
-                        return {"success": True, "verified": True}
-                    else:
-                        print(f"[WEBHOOK FAIL] Token {token} expired.")
-                else:
-                    print(f"[WEBHOOK FAIL] Sender phone mismatch. Webhook: {from_phone}, Cached: {registered_phone}")
-
-        return {"success": True, "message": "Processed webhook message"}
-    except Exception as e:
-        print(f"[WEBHOOK ERROR] webhook processing failed: {str(e)}")
-        return {"success": False, "error": str(e)}
-
-
-@app.post("/api/auth/login")
-async def login_credential_fallback(payload: LoginRequest):
-    """
-    Option A: Credential Fallback Login.
-    Key in Phone Number and Password, lookup linked email, authenticate, and check active status.
-    """
-    sanitized_phone = normalize_phone(payload.phone)
-
-    # 1. Fetch user document by phone ID key
-    user_ref = db.collection("users").document(sanitized_phone)
-    user_snap = user_ref.get()
-
-    if not user_snap.exists:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect phone number or password."
-        )
-
-    user_data = user_snap.to_dict()
-    linked_email = user_data.get("email")
-
-    if not linked_email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect phone number or password."
-        )
-
-    # 2. Check is_active gate explicitly BEFORE Auth validation
-    if not user_data.get("is_active", False):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account inactive. Please click the link sent to your email to verify your profile first."
-        )
-
-    # 3. Forward email/password credentials to Firebase Auth REST validation endpoint
-    is_production = os.environ.get("ENVIRONMENT", "development").lower() == "production"
-    
-    if not FIREBASE_API_KEY or FIREBASE_API_KEY == "mock_firebase_key":
-        if is_production:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Firebase API Key is unconfigured in production environment."
-            )
-        # Fallback to local dev mock bypass if key is not configured
-        print(f"[DEV AUTH BYPASS] User {linked_email} logged in without verified REST key.")
-        return {
-            "success": True,
-            "token": f"dev_mock_jwt_token_{sanitized_phone}_{int(time.time() + (30*24*60*60))}",
-            "expires_in": 2592000, # 30 days
-            "uid": user_data.get("user_id", "mock_uid")
+        # Create Firestore user profile
+        user_doc_data = {
+            "phone_number": normalized,
+            "phone": f"+{normalized}" if not normalized.startswith("+") else normalized,
+            "name": payload.name,
+            "email": payload.email,
+            "created_at": int(time.time() * 1000),
+            "referral_used": payload.referral_code,
+            "is_email_verified": False,
+            "is_active": False,
+            "account_status": "inactive",
+            "status": "inactive",
+            "coins": 0
         }
-
-    rest_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
-    if not http_client:
-        raise HTTPException(status_code=500, detail="Server HTTP client pool uninitialized.")
-    res = await http_client.post(rest_url, json={
-        "email": linked_email,
-        "password": payload.password,
-        "returnSecureToken": True
-    })
-
-    if res.status_code != 200:
+        db.collection("users").document(uid).set(user_doc_data)
+    except Exception as e:
+        # Rollback Auth User if Firestore creation fails
+        auth.delete_user(uid)
+        print(f"[REGISTER ROLLBACK] Firestore profile failed, rolled back user {uid}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect phone number or password."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initialize user database profile."
         )
 
-    res_data = res.json()
-
-    # Generate custom rolling 30-day JWT signature (represented by Firebase ID Token)
-    return {
-        "success": True,
-        "token": res_data["idToken"],
-        "expires_in": int(res_data["expiresIn"]),
-        "refresh_token": res_data["refreshToken"],
-        "uid": res_data["localId"]
-    }
-
-
-@app.post("/api/auth/passwordless-login")
-def passwordless_login_init(payload: PasswordlessLoginRequest):
-    """
-    Option B: Passwordless WhatsApp Handshake Login.
-    Generates a transient code that user sends via WhatsApp to instantly verify session.
-    """
-    sanitized_phone = normalize_phone(payload.phone)
-    user_ref = db.collection("users").document(sanitized_phone)
-    user_snap = user_ref.get()
-
-    if not user_snap.exists:
-        raise HTTPException(status_code=404, detail="No registered account found with this phone number.")
-
-    user_data = user_snap.to_dict()
-    if not user_data.get("is_active", False):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account inactive. Please click the link sent to your email to verify your profile first."
+    # Generate email verification link
+    dev_verify_link = None
+    try:
+        # Build action code settings matching local callback URL
+        action_code_settings = auth.ActionCodeSettings(
+            url="http://localhost:3000/auth/callback",
+            handle_code_in_app=True
         )
+        dev_verify_link = auth.generate_email_verification_link(payload.email, action_code_settings)
+        
+        # Send Email via SMTP if credentials exist
+        smtp_user = os.environ.get("SMTP_USER")
+        smtp_pass = os.environ.get("SMTP_PASS")
+        if smtp_user and smtp_pass:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
 
-    # Generate transient login verification token
-    token = "LGN" + "".join(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(5))
-    now = int(time.time())
+            msg = MIMEMultipart()
+            msg['From'] = smtp_user
+            msg['To'] = payload.email
+            msg['Subject'] = "Verify your Hau Hau Profile 🌟"
+            
+            body = f"""Ustaad! Welcome to Hau Hau.
 
-    # Cache transient login session in auth_handshakes
-    db.collection("auth_handshakes").document(token).set({
-        "phone": sanitized_phone,
-        "is_verified": False,
-        "created_at": now,
-        "expires_at": now + (5 * 60) # 5 minutes TTL
-    })
+Please click the link below to verify your email and activate your account:
+{dev_verify_link}
 
-    bot_number = os.environ.get("WHATSAPP_BOT_NUMBER", "YOUR_BOT_NUMBER")
-    prefilled_text = f"Hey Hau Hau! 🌟\n\nPlease verify my instant login session.\n\nRef: {token}"
-    encoded_text = httpx.utils.quote(prefilled_text)
-    wa_link = f"https://wa.me/{bot_number}?text={encoded_text}"
+Let's get cooking!"""
+            msg.attach(MIMEText(body, 'plain'))
+            
+            with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+                print(f"[SMTP] Email verification successfully sent to {payload.email}")
+    except Exception as e:
+        print(f"[SMTP ERROR] Verification email delivery failed: {e}")
 
     return {
-        "success": True,
-        "token": token,
-        "redirect_url": wa_link
+        "status": "registered_inactive",
+        "message": "User registered. Activation link has been sent to email.",
+        "uid": uid,
+        "dev_verify_link": dev_verify_link # Exposed in dev environments for easy verification
     }
-
 
 @app.post("/api/auth/verify-email-listener")
-def verify_email_webhook_trigger(phone: str):
+def verify_email_listener(phone: str):
     """
-    Mock Email verification listener endpoint.
-    Called when student clicks validation link, fully activating profile: is_email_verified = True, is_active = True.
+    Mock/Listener callback to activate account when verification is triggered (email verification listener).
     """
-    sanitized_phone = normalize_phone(phone)
-    user_ref = db.collection("users").document(sanitized_phone)
-    user_snap = user_ref.get()
-
-    if not user_snap.exists:
-        raise HTTPException(status_code=404, detail="User profile not found.")
-
-    user_data = user_snap.to_dict()
-    uid = user_data.get("user_id")
-
-    if not uid:
-        raise HTTPException(status_code=400, detail="User has no Firebase UID linked.")
-
-    # 1. Update Firebase Auth status to Enabled
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
+        )
+        
+    user_doc = find_user_by_phone(phone)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User profile not found."
+        )
+        
+    uid = user_doc.id
     try:
-        firebase_auth.update_user(uid, disabled=False)
+        # Enable Firebase Auth user
+        auth.update_user(uid, disabled=False)
+        
+        # Update Firestore status
+        db.collection("users").document(uid).update({
+            "is_email_verified": True,
+            "is_active": True,
+            "account_status": "active",
+            "status": "active"
+        })
+        
+        print(f"[EMAIL VERIFICATION SUCCESS] User {uid} activated successfully.")
+        return {"status": "activated", "uid": uid}
     except Exception as e:
-        print(f"[AUTH ERROR] Failed to enable user in Firebase Auth: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Verification callback execution failed: {str(e)}"
+        )
 
-    # 2. Update Firestore document flags
-    user_ref.update({
-        "is_email_verified": True,
-        "is_active": True,
-        "account_status": "active"
+@app.post("/api/auth/login")
+def login(payload: LoginRequest):
+    """
+    Credential Fallback: Lookup Firebase Email by Phone, verify credentials via Firebase REST Auth,
+    and block the session if is_active = False.
+    """
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
+        )
+
+    # 1. Look up user profile by phone
+    user_doc = find_user_by_phone(payload.phone)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incorrect phone number or password."
+        )
+
+    uid = user_doc.id
+    user_data = user_doc.to_dict()
+    
+    # 2. Check active status first
+    is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+    if not is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account inactive. Please check your email to verify your profile first."
+        )
+
+    email = user_data.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No email registered for this account profile."
+        )
+
+    # 3. Call Firebase REST Auth API to verify password
+    api_key = os.environ.get("NEXT_PUBLIC_FIREBASE_API_KEY") or os.environ.get("FIREBASE_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Auth Service API key is not configured."
+        )
+
+    rest_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+    try:
+        res = requests.post(rest_url, json={
+            "email": email,
+            "password": payload.password,
+            "returnSecureToken": True
+        })
+        
+        if not res.ok:
+            print(f"[REST LOGIN FAIL] REST verification failed: {res.text}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect phone number or password."
+            )
+            
+        data = res.json()
+        token = data.get("idToken")
+        
+        return {
+            "token": token,
+            "uid": uid,
+            "status": "authenticated"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[REST AUTH EXCEPTION] REST connection failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication REST gateway connection failed."
+        )
+
+@app.post("/api/auth/passwordless-login")
+def passwordless_login(payload: HandshakeRequest):
+    """
+    Option B Login: Initiate passwordless login handshake via WhatsApp.
+    Check if the user exists and is active, then generate the verification token.
+    """
+    if not db:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection uninitialized."
+        )
+
+    # Look up user profile by phone
+    user_doc = find_user_by_phone(payload.phone)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This phone number is not registered."
+        )
+
+    user_data = user_doc.to_dict()
+    
+    # Block if account is inactive
+    is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+    if not is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account inactive. Please verify your email first."
+        )
+
+    # Generate login verification token (5 mins TTL)
+    token = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    expires_at = int(time.time() * 1000) + (5 * 60 * 1000)
+
+    # Reuse the auth_handshakes collection
+    db.collection("auth_handshakes").document(token).set({
+        "phone": normalize_phone(payload.phone),
+        "is_verified": False,
+        "created_at": int(time.time() * 1000),
+        "expires_at": expires_at,
+        "verified_at": None
     })
 
-    print(f"[AUTH SUCCESS] User profile {sanitized_phone} fully activated.")
-    return {"success": True, "message": "Profile fully activated.", "is_active": True}
+    # Retrieve bot number from env
+    bot_raw = os.environ.get("WHATSAPP_BOT_NUMBER") or os.environ.get("NEXT_PUBLIC_WHATSAPP_BOT_NUMBER") or "15550553733"
+    bot_number = normalize_phone(bot_raw)
+    
+    # Format wa.me redirect link
+    redirect_text = f"Hey Hau Hau! 🌟\n\nPlease verify my login session.\n\nRef: {token}"
+    encoded_text = requests.utils.quote(redirect_text)
+    redirect_url = f"https://wa.me/{bot_number}?text={encoded_text}"
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("auth_engine:app", host="0.0.0.0", port=8000, reload=True)
+    return {
+        "token": token,
+        "redirect_url": redirect_url,
+        "expires_in_seconds": 300
+    }

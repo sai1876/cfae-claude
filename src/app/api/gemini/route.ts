@@ -35,7 +35,7 @@ async function generateWithGemini(prompt: string, systemInstruction?: string): P
 
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const key = keys[attempt];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     try {
       const response = await fetch(url, {
         method: "POST",

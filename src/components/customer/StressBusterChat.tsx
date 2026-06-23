@@ -278,10 +278,10 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
             transition={{ type: 'spring', stiffness: 420, damping: 36 }}
             className={`fixed right-4 ${panelBottom} z-[9998] w-[315px]`}
             style={{
-              background: 'linear-gradient(160deg, #1b1208 0%, #221a0c 100%)',
-              border: '1px solid rgba(212,163,84,0.18)',
+              background: 'linear-gradient(160deg, #FAF6F0 0%, #F5EFEB 100%)',
+              border: '1px solid var(--border)',
               borderRadius: 22,
-              boxShadow: '0 30px 70px rgba(0,0,0,0.65), 0 0 0 1px rgba(212,163,84,0.06)',
+              boxShadow: '0 20px 50px rgba(44, 26, 16, 0.08)',
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
@@ -290,8 +290,8 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
           >
             {/* ── Header ── */}
             <div style={{
-              background: 'linear-gradient(90deg,#2b1e0b 0%,#1e1508 100%)',
-              borderBottom: '1px solid rgba(212,163,84,0.12)',
+              background: 'linear-gradient(90deg, #EADFCE 0%, #E3D4C1 100%)',
+              borderBottom: '1px solid var(--border)',
               padding: '11px 14px',
               display: 'flex',
               alignItems: 'center',
@@ -309,22 +309,22 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                   <Sparkles size={16} color="#fff" />
                 </div>
                 <div>
-                  <p style={{ color: '#d4a354', fontWeight: 700, fontSize: 12.5, lineHeight: 1.2 }}>Oasis Stress-Buster</p>
+                  <p style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 12.5, lineHeight: 1.2 }}>Oasis Stress-Buster</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
-                    <p style={{ color: 'rgba(212,163,84,0.5)', fontSize: 9.5 }}>Campus Counselor · Online</p>
+                    <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 9.5 }}>Campus Counselor · Online</p>
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 style={{
-                  color: 'rgba(212,163,84,0.45)', background: 'none', border: 'none',
+                  color: 'rgba(var(--foreground-rgb), 0.45)', background: 'none', border: 'none',
                   cursor: 'pointer', padding: 4, borderRadius: 6,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#d4a354')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(212,163,84,0.45)')}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--primary)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(var(--foreground-rgb), 0.45)')}
               >
                 <X size={15} />
               </button>
@@ -342,13 +342,13 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                   <div style={{
                     maxWidth: '87%', borderRadius: '16px 16px 16px 4px',
                     padding: '10px 14px', display: 'flex', gap: 5, alignItems: 'center',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(212,163,84,0.1)',
+                    background: 'rgba(var(--foreground-rgb), 0.04)',
+                    border: '1px solid var(--border)',
                   }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      <div style={{ width: 160, height: 10, borderRadius: 6, background: 'rgba(212,163,84,0.15)', animation: 'sbShimmer 1.4s ease-in-out infinite' }} />
-                      <div style={{ width: 120, height: 10, borderRadius: 6, background: 'rgba(212,163,84,0.1)', animation: 'sbShimmer 1.4s 0.2s ease-in-out infinite' }} />
-                      <div style={{ width: 80, height: 10, borderRadius: 6, background: 'rgba(212,163,84,0.07)', animation: 'sbShimmer 1.4s 0.4s ease-in-out infinite' }} />
+                      <div style={{ width: 160, height: 10, borderRadius: 6, background: 'rgba(var(--foreground-rgb), 0.15)', animation: 'sbShimmer 1.4s ease-in-out infinite' }} />
+                      <div style={{ width: 120, height: 10, borderRadius: 6, background: 'rgba(var(--foreground-rgb), 0.08)', animation: 'sbShimmer 1.4s 0.2s ease-in-out infinite' }} />
+                      <div style={{ width: 80, height: 10, borderRadius: 6, background: 'rgba(var(--foreground-rgb), 0.05)', animation: 'sbShimmer 1.4s 0.4s ease-in-out infinite' }} />
                     </div>
                   </div>
                 </div>
@@ -365,15 +365,16 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                     style={{
                       maxWidth: '87%',
                       background: msg.role === 'user'
-                        ? 'linear-gradient(135deg,#c49040,#8a5f1e)'
-                        : 'rgba(255,255,255,0.055)',
-                      border: msg.role === 'user' ? 'none' : '1px solid rgba(212,163,84,0.11)',
+                        ? 'linear-gradient(135deg,#e2a855,#a26b1f)'
+                        : '#FFFFFF',
+                      border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
                       borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                       padding: '9px 12px',
-                      color: msg.role === 'user' ? '#fff' : 'rgba(255,255,255,0.88)',
+                      color: msg.role === 'user' ? 'var(--primary-foreground)' : 'var(--foreground)',
                       fontSize: 12.5,
                       lineHeight: 1.55,
                       whiteSpace: 'pre-wrap',
+                      boxShadow: msg.role === 'user' ? 'none' : '0 2px 10px rgba(44, 26, 16, 0.04)',
                     }}
                   >
                     {msg.content}
@@ -382,16 +383,16 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                     {msg.couponCode && (
                       <div style={{
                         marginTop: 10,
-                        background: 'rgba(212,163,84,0.1)',
-                        border: '1px dashed rgba(212,163,84,0.45)',
+                        background: 'rgba(198,139,53,0.08)',
+                        border: '1px dashed var(--primary)',
                         borderRadius: 10, padding: '8px 10px', textAlign: 'center',
                       }}>
-                        <p style={{ color: '#d4a354', fontSize: 9.5, marginBottom: 3 }}>🎟️ Your Stress Coupon</p>
+                        <p style={{ color: 'var(--primary)', fontSize: 9.5, marginBottom: 3 }}>🎟️ Your Stress Coupon</p>
                         <p style={{
-                          color: '#f0c060', fontWeight: 800, fontSize: 13.5,
+                          color: 'var(--primary)', fontWeight: 800, fontSize: 13.5,
                           letterSpacing: '0.1em', fontFamily: 'monospace',
                         }}>{msg.couponCode}</p>
-                        <p style={{ color: 'rgba(212,163,84,0.55)', fontSize: 8.5, marginTop: 3 }}>10% OFF · Use at checkout</p>
+                        <p style={{ color: 'var(--muted-foreground)', fontSize: 8.5, marginTop: 3 }}>10% OFF · Use at checkout</p>
                       </div>
                     )}
 
@@ -490,14 +491,15 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
               {isTyping && (
                 <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                   <div style={{
-                    background: 'rgba(255,255,255,0.055)',
-                    border: '1px solid rgba(212,163,84,0.11)',
+                    background: '#FFFFFF',
+                    border: '1px solid var(--border)',
                     borderRadius: '16px 16px 16px 4px',
                     padding: '10px 14px', display: 'flex', gap: 4, alignItems: 'center',
+                    boxShadow: '0 2px 10px rgba(44, 26, 16, 0.04)',
                   }}>
                     {[0, 160, 320].map(d => (
                       <span key={d} style={{
-                        width: 5, height: 5, borderRadius: '50%', background: '#d4a354', display: 'inline-block',
+                        width: 5, height: 5, borderRadius: '50%', background: 'var(--primary)', display: 'inline-block',
                         animation: `sbBounce 0.9s ${d}ms ease-in-out infinite`,
                       }} />
                     ))}
@@ -516,11 +518,11 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                   exit={{ opacity: 0, height: 0 }}
                   style={{
                     padding: '8px 10px',
-                    borderTop: '1px solid rgba(212,163,84,0.08)',
+                    borderTop: '1px solid var(--border)',
                     flexShrink: 0,
                   }}
                 >
-                  <p style={{ color: 'rgba(212,163,84,0.45)', fontSize: 9, textAlign: 'center', marginBottom: 6, letterSpacing: '0.05em' }}>ABHI KAISA FEEL HO RAHA HAI?</p>
+                  <p style={{ color: 'var(--muted-foreground)', fontSize: 9, textAlign: 'center', marginBottom: 6, letterSpacing: '0.05em' }}>ABHI KAISA FEEL HO RAHA HAI?</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
                     {MOOD_GRID.map(({ emoji, label }) => (
                       <motion.button
@@ -529,15 +531,15 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                         whileTap={{ scale: 0.94 }}
                         onClick={() => sendMessage(`${emoji} ${label}`)}
                         style={{
-                          background: 'rgba(212,163,84,0.06)',
-                          border: '1px solid rgba(212,163,84,0.15)',
+                          background: 'rgba(198,139,53,0.05)',
+                          border: '1px solid var(--border)',
                           borderRadius: 10, padding: '7px 4px',
                           cursor: 'pointer', display: 'flex', flexDirection: 'column',
                           alignItems: 'center', gap: 3,
                         }}
                       >
                         <span style={{ fontSize: 20 }}>{emoji}</span>
-                        <span style={{ color: 'rgba(212,163,84,0.75)', fontSize: 8.5, textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
+                        <span style={{ color: 'var(--foreground)', fontSize: 8.5, textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
                       </motion.button>
                     ))}
                   </div>
@@ -548,8 +550,8 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
             {/* ── Input ── */}
             <div style={{
               padding: '9px 10px',
-              borderTop: '1px solid rgba(212,163,84,0.1)',
-              background: 'rgba(0,0,0,0.18)',
+              borderTop: '1px solid var(--border)',
+              background: 'rgba(var(--foreground-rgb), 0.03)',
               flexShrink: 0,
               display: 'flex', gap: 7, alignItems: 'center',
             }}>
@@ -562,14 +564,14 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                 placeholder="Bol bhai, kya chal raha hai..."
                 style={{
                   flex: 1,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(212,163,84,0.18)',
+                  background: '#FFFFFF',
+                  border: '1px solid var(--border)',
                   borderRadius: 12, padding: '8px 12px',
-                  color: '#fff', fontSize: 12.5, outline: 'none',
+                  color: 'var(--foreground)', fontSize: 12.5, outline: 'none',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => (e.currentTarget.style.borderColor = 'rgba(212,163,84,0.5)')}
-                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(212,163,84,0.18)')}
+                onFocus={e => (e.currentTarget.style.borderColor = 'var(--primary)')}
+                onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
               />
               <button
                 onClick={() => sendMessage(inputValue)}
@@ -577,14 +579,14 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
                 style={{
                   width: 34, height: 34, flexShrink: 0, borderRadius: 10,
                   background: !inputValue.trim() || isTyping
-                    ? 'rgba(212,163,84,0.1)'
-                    : 'linear-gradient(135deg,#c49040,#8a5f1e)',
+                    ? 'rgba(var(--foreground-rgb), 0.05)'
+                    : 'linear-gradient(135deg,#e2a855,#a26b1f)',
                   border: 'none',
-                  color: !inputValue.trim() || isTyping ? 'rgba(212,163,84,0.3)' : '#fff',
+                  color: !inputValue.trim() || isTyping ? 'rgba(var(--foreground-rgb), 0.25)' : '#fff',
                   cursor: !inputValue.trim() || isTyping ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s',
-                  boxShadow: !inputValue.trim() || isTyping ? 'none' : '0 4px 12px rgba(196,144,64,0.3)',
+                  boxShadow: !inputValue.trim() || isTyping ? 'none' : '0 4px 12px rgba(198,139,53,0.3)',
                 }}
               >
                 <Send size={14} />
@@ -602,18 +604,18 @@ export default function StressBusterChat({ showNavigation = false }: { showNavig
         className={`fixed right-4 ${btnBottom} z-[9999]`}
         style={{
           width: 50, height: 50, borderRadius: '50%',
-          background: isOpen ? 'rgba(28,18,8,0.95)' : 'linear-gradient(135deg,#c49040,#8a5f1e)',
-          border: '1.5px solid rgba(212,163,84,0.35)',
-          color: '#fff', cursor: 'pointer',
+          background: isOpen ? 'var(--card)' : 'linear-gradient(135deg,#e2a855,#a26b1f)',
+          border: '1.5px solid var(--border)',
+          color: isOpen ? 'var(--primary)' : '#fff', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: isOpen ? '0 4px 20px rgba(0,0,0,0.5)' : '0 6px 24px rgba(196,144,64,0.4)',
+          boxShadow: isOpen ? '0 4px 20px rgba(44,26,16,0.08)' : '0 6px 24px rgba(198,139,53,0.3)',
           transition: 'background 0.3s, box-shadow 0.3s',
         }}
       >
         <AnimatePresence mode="wait">
           {isOpen
             ? <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.16 }}>
-                <X size={20} color="#d4a354" />
+                <X size={20} color="var(--primary)" />
               </motion.div>
             : <motion.div key="msg" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={{ duration: 0.16 }}>
                 <MessageCircle size={22} />

@@ -42,7 +42,8 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
   type PendingAction = 
     | { type: 'delete'; id: string }
     | { type: 'update_password'; id: string; newPassword: string }
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+    | { type: 'edit_staff'; id: string };
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   
   const [editingPasswordId, setEditingPasswordId] = useState<string | null>(null);
   const [newInlinePassword, setNewInlinePassword] = useState('');
@@ -134,7 +135,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
             reason: `Requested to update staff member ${name} (${role}) at ${outlet}`
           });
           alert('Approval request submitted to the Owner successfully!');
-          setStep('list');
+          setStep('form');
           setEditingStaffId(null);
           setEmployeeId('');
           setName('');
@@ -171,7 +172,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
           reason: `Requested new staff member ${name} (${role}) for ${outlet}`
         });
         alert('Approval request submitted to the Owner successfully!');
-        setStep('list');
+        setStep('form');
         setEmployeeId('');
         setName('');
         setStaffEmail('');

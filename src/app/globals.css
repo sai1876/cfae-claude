@@ -5,14 +5,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Fable Noir';
-  src: url('/fonts/FableNoir.otf') format('opentype'),
-       url('/fonts/FableNoir.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+
 
 @layer utilities {
   .text-balance {
@@ -22,59 +15,61 @@
 
 @layer base {
   :root {
-    --background: #0A0604; /* Deep premium espresso-black */
-    --foreground: #f7dec4;
+    --background: #FAF6F0; /* Soft warm ivory cream */
+    --background-rgb: 250, 246, 240;
+    --foreground: #2C1A10; /* Deep rich espresso coffee bean */
+    --foreground-rgb: 44, 26, 16;
     
-    --card: #120a06; /* Rich velvet dark-chocolate card */
-    --card-foreground: #f7dec4;
+    --card: #FFFFFF; /* Pure clean card */
+    --card-foreground: #2C1A10;
     
-    --popover: #120a06;
-    --popover-foreground: #f7dec4;
+    --popover: #FFFFFF;
+    --popover-foreground: #2C1A10;
     
-    --primary: #f8bc51;
-    --primary-foreground: #0A0604;
+    --primary: #C68B35; /* Premium dark warm gold/amber */
+    --primary-foreground: #FAF6F0;
     
-    --secondary: #afd0a1;
-    --secondary-foreground: #0A0604;
+    --secondary: #6E9C62; /* Forest canopy bamboo green */
+    --secondary-foreground: #FAF6F0;
     
-    --muted: #140e0a;
-    --muted-foreground: #d4c4b0;
+    --muted: #F3ECE0; /* Soft warm latte beige */
+    --muted-foreground: #7E6D5D; /* Muted roasted coffee */
     
-    --accent: #2a1d15;
-    --accent-foreground: #f7dec4;
+    --accent: #EFE6D5; /* Accent beige container */
+    --accent-foreground: #2C1A10;
     
-    --destructive: #ffb4ab;
-    --destructive-foreground: #690005;
+    --destructive: #BA1A1A;
+    --destructive-foreground: #FFFFFF;
     
-    --border: #302117; /* Warm coffee border */
-    --input: #302117;
-    --ring: #f8bc51;
+    --border: #DFD7C8; /* Latte art milk-border */
+    --input: #DFD7C8;
+    --ring: #C68B35;
     
     --radius: 0.5rem;
 
     /* V2 specific */
-    --surface: #120a06;
-    --surface-dim: #0d0805;
-    --surface-bright: #24170d;
-    --surface-container-lowest: #070402;
-    --surface-container-low: #120a06;
-    --surface-container: #1a0f0a;
-    --surface-container-high: #231710;
-    --surface-container-highest: #2c1e15;
+    --surface: #FFFFFF;
+    --surface-dim: #F5EFEB;
+    --surface-bright: #FFFFFF;
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-low: #FAF6F0;
+    --surface-container: #F3ECE0;
+    --surface-container-high: #EBE1D3;
+    --surface-container-highest: #E3D7C5;
     
-    --on-surface: #f7dec4;
-    --on-surface-variant: #d4c4b0;
+    --on-surface: #2C1A10;
+    --on-surface-variant: #7E6D5D;
     
-    --outline: #9c8f7c;
-    --outline-variant: #302117;
+    --outline: #94887C;
+    --outline-variant: #DFD7C8;
     
-    --earth: #0a0604;
-    --cream: #f7dec4;
-    --gold: #f8bc51;
-    --amber: #c8922a;
-    --bamboo: #afd0a1;
-    --water: #b3ccc0;
-    --canopy: #324e2a;
+    --earth: #FAF6F0;
+    --cream: #2C1A10;
+    --gold: #C68B35;
+    --amber: #B87C24;
+    --bamboo: #6E9C62;
+    --water: #7BA290;
+    --canopy: #EFE6D5;
   }
   
 
@@ -102,7 +97,7 @@
 .category-scroll-container {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(248, 188, 81, 0.35) rgba(255, 255, 255, 0.03);
+  scrollbar-color: rgba(198, 139, 53, 0.35) rgba(44, 26, 16, 0.03);
 }
 
 .category-scroll-container::-webkit-scrollbar {
@@ -110,21 +105,21 @@
 }
 
 .category-scroll-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(44, 26, 16, 0.02);
   border-radius: 99px;
   margin: 0 40px; /* Elegant margin insert */
 }
 
 .category-scroll-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(to right, rgba(248, 188, 81, 0.15), #f8bc51, rgba(248, 188, 81, 0.15));
+  background: linear-gradient(to right, rgba(198, 139, 53, 0.15), #C68B35, rgba(198, 139, 53, 0.15));
   border-radius: 99px;
-  box-shadow: 0 0 10px rgba(248, 188, 81, 0.3);
+  box-shadow: 0 0 10px rgba(198, 139, 53, 0.3);
   transition: all 0.3s ease;
 }
 
 .category-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to right, rgba(248, 188, 81, 0.3), #ffce7b, rgba(248, 188, 81, 0.3));
-  box-shadow: 0 0 15px rgba(248, 188, 81, 0.5);
+  background: linear-gradient(to right, rgba(198, 139, 53, 0.3), #E2A855, rgba(198, 139, 53, 0.3));
+  box-shadow: 0 0 15px rgba(198, 139, 53, 0.5);
 }
 
 /* Fix Leaflet map tiles broken by Tailwind's default img styling */
@@ -146,8 +141,8 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #120a06 inset !important;
-  -webkit-text-fill-color: #f7dec4 !important;
+  -webkit-box-shadow: 0 0 0 30px #FFFFFF inset !important;
+  -webkit-text-fill-color: #2C1A10 !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 

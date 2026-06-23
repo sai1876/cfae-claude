@@ -26,6 +26,8 @@ export interface UserDocument {
   created_at: number; // Unix timestamp
   stress_coupons_issued?: { month: string; count: number; }; // Tracks coupon usage per month (format: YYYY-MM)
   addresses?: SavedAddress[];
+  total_completed_orders?: number;
+  successful_referrals?: number;
 }
 
 // Menu Items
@@ -66,7 +68,7 @@ export interface MenuItem {
 
 
 // Orders
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'rejected';
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'dispatched' | 'out_for_delivery' | 'delivered' | 'completed' | 'rejected';
 export type OrderType = 'dine-in' | 'pickup' | 'delivery';
 
 export interface OrderItem {
@@ -289,6 +291,39 @@ export interface Staff {
   created_at: number;
   location?: { lat: number; lng: number; accuracy?: number; updated_at: number };
   schedule?: StaffShift[];
+  faceDescriptor?: any;
+}
+
+export interface PromoDraft {
+  code: string;
+  discountPercent: number;
+  description: string;
+  categoryScope: string;
+}
+
+export interface AISlideDetails {
+  tag: string;
+  desc: string;
+  tags: string[];
+  accentColor: string;
+  bgColor: string;
+}
+
+export interface SmartRefillAnalysis {
+  suggested_refill_amount: number;
+  reasoning: string;
+}
+
+export interface AtmosphereConfig {
+  active_theme: 'default' | 'scorching' | 'raining' | 'night' | 'exam' | 'fest' | 'valentines' | 'custom';
+  hero_headline: string;
+  hero_sub: string;
+  banner_active: boolean;
+  banner_text: string;
+  banner_color: 'golden' | 'urgent' | 'success' | 'dark';
+  reason: string;
+  social_stats?: any;
+  social_stats_active?: boolean;
 }
 
 // Manager Approvals

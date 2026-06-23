@@ -73,7 +73,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="absolute bottom-24 md:bottom-12 right-6 md:right-12 bg-surface/40 backdrop-blur-xl border border-white/10 px-5 py-3 rounded-full text-sm font-mono flex items-center gap-3 text-on-surface"
+        className="absolute bottom-24 md:bottom-12 right-6 md:right-12 bg-surface/60 backdrop-blur-xl border border-border px-5 py-3 rounded-full text-sm font-mono flex items-center gap-3 text-on-surface"
       >
         <span>41°C outside</span>
         <span className="text-outline">|</span>

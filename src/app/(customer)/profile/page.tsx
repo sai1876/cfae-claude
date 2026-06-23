@@ -119,10 +119,10 @@ export default function ProfilePage() {
 
   if (!user || !userProfile) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0e0b07', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ minHeight: '100vh', background: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <span style={{ fontSize: 60, marginBottom: 20 }}>👋</span>
-        <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Please Login</h2>
-        <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 30 }}>You need to be logged in to view your profile and order history.</p>
+        <h2 style={{ color: 'var(--foreground)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Please Login</h2>
+        <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', textAlign: 'center', marginBottom: 30 }}>You need to be logged in to view your profile and order history.</p>
         <button
           onClick={() => setIsAuthOpen(true)}
           style={{ background: '#d4a354', color: '#1b1208', border: 'none', padding: '12px 24px', borderRadius: 24, fontWeight: 700, cursor: 'pointer' }}
@@ -277,7 +277,7 @@ export default function ProfilePage() {
   const memberSince = new Date(userProfile.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0b07', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--background)', paddingBottom: 100 }}>
       {/* ── Header Area ── */}
       <div style={{
         padding: '40px 20px 30px',
@@ -288,12 +288,12 @@ export default function ProfilePage() {
           width: 80, height: 80, borderRadius: '50%',
           background: 'linear-gradient(135deg, #c49040, #8a5f1e)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontSize: 32, fontWeight: 700, marginBottom: 16,
+          color: 'var(--foreground)', fontSize: 32, fontWeight: 700, marginBottom: 16,
           boxShadow: '0 8px 24px rgba(196,144,64,0.3)',
         }}>
           {getInitials()}
         </div>
-        <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
+        <h2 style={{ color: 'var(--foreground)', fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
           {user.phone.replace(/(\+\d{2})(\d{4})(\d{6})/, '$1 ****$3')}
         </h2>
         {userProfile.student_email && (
@@ -307,32 +307,32 @@ export default function ProfilePage() {
         
         {/* Stats Row */}
         <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.1)', borderRadius: 16, padding: '16px 12px', textAlign: 'center' }}>
+            <div style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 12px', textAlign: 'center' }}>
               <Award size={20} color="#d4a354" style={{ margin: '0 auto 8px' }} />
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Coins</p>
-              <p style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{activeBalance}</p>
+              <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Coins</p>
+              <p style={{ color: 'var(--foreground)', fontSize: 18, fontWeight: 700 }}>{activeBalance}</p>
             </div>
           <div 
             onClick={scrollToOrders}
-            style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.1)', borderRadius: 16, padding: '16px 12px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.2s' }}
+            style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 12px', textAlign: 'center', cursor: 'pointer', transition: 'background 0.2s' }}
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(212,163,84,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'var(--card)'}
           >
             <Gift size={20} color="#d4a354" style={{ margin: '0 auto 8px' }} />
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</p>
-            <p style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{orders.length}</p>
+            <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</p>
+            <p style={{ color: 'var(--foreground)', fontSize: 18, fontWeight: 700 }}>{orders.length}</p>
           </div>
-          <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.1)', borderRadius: 16, padding: '16px 12px', textAlign: 'center' }}>
+          <div style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 12px', textAlign: 'center' }}>
             <Clock size={20} color="#d4a354" style={{ margin: '0 auto 8px' }} />
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Joined</p>
-            <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginTop: 4 }}>{memberSince}</p>
+            <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Joined</p>
+            <p style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, marginTop: 4 }}>{memberSince}</p>
           </div>
         </div>
 
         {/* Rewards Progress */}
         <div 
           onClick={() => setShowPointsHistory(true)}
-          style={{ cursor: 'pointer', background: 'rgba(212,163,84,0.05)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 16, padding: 20 }}
+          style={{ cursor: 'pointer', background: 'rgba(198,139,53,0.05)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}
           className="hover:bg-[rgba(212,163,84,0.08)] transition-colors relative overflow-hidden"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -340,15 +340,15 @@ export default function ProfilePage() {
             <span className="text-[10px] text-[#d4a354]/60 uppercase tracking-widest font-mono flex items-center gap-1">View Ledger &rarr;</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 32, fontWeight: 700, color: '#d4a354', lineHeight: 1 }}>{activeBalance}</span>
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, paddingBottom: 4 }}>pts</span>
+            <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)', lineHeight: 1 }}>{activeBalance}</span>
+            <span style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 14, paddingBottom: 4 }}>pts</span>
           </div>
           
-          <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 12, marginBottom: 12, border: '1px dashed rgba(255,255,255,0.1)' }}>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
-              Current Tier: <span style={{ color: '#d4a354' }}>{(userProfile.total_completed_orders || 0) <= 3 ? "Welcome Multiplier (15%)" : (userProfile.total_completed_orders || 0) <= 5 ? "Transition Phase (10%)" : "Lifetime Elite (8%)"}</span>
+          <div style={{ background: 'rgba(var(--foreground-rgb), 0.05)', borderRadius: 12, padding: 12, marginBottom: 12, border: '1px dashed var(--border)' }}>
+            <p style={{ color: 'rgba(var(--foreground-rgb), 0.8)', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+              Current Tier: <span style={{ color: 'var(--primary)' }}>{(userProfile.total_completed_orders || 0) <= 3 ? "Welcome Multiplier (15%)" : (userProfile.total_completed_orders || 0) <= 5 ? "Transition Phase (10%)" : "Lifetime Elite (8%)"}</span>
             </p>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
+            <p style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 11 }}>
               {(userProfile.total_completed_orders || 0) <= 3 ? "You are earning an accelerated 15% back on your first 3 orders!" : (userProfile.total_completed_orders || 0) <= 5 ? "You are earning 10% back on your 4th and 5th orders!" : "You are earning a flat 8% back on every single order for life."}
             </p>
           </div>
@@ -366,7 +366,7 @@ export default function ProfilePage() {
               <h3 style={{ color: '#4ade80', fontSize: 15, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Check size={18} /> Get Verified Student Badge
               </h3>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 16 }}>
+              <p style={{ color: 'var(--muted-foreground)', fontSize: 13, marginBottom: 16 }}>
                 Verify your student email to unlock exclusive discounts and early access to drops.
               </p>
               
@@ -381,14 +381,14 @@ export default function ProfilePage() {
                     value={verifyStudentEmail}
                     onChange={e => setVerifyStudentEmail(e.target.value)}
                     placeholder="Student Email (.edu, .ac.in)"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, color: '#fff', fontSize: 14, outline: 'none' }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, color: 'var(--foreground)', fontSize: 14, outline: 'none' }}
                   />
                   <input
                     type="password"
                     value={verifyPassword}
                     onChange={e => setVerifyPassword(e.target.value)}
                     placeholder="Current Password"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, color: '#fff', fontSize: 14, outline: 'none' }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, color: 'var(--foreground)', fontSize: 14, outline: 'none' }}
                   />
                   {verifyError && <p style={{ color: '#ef4444', fontSize: 12 }}>{verifyError}</p>}
                   <button
@@ -406,14 +406,14 @@ export default function ProfilePage() {
           {/* Referral */}
         {userProfile.referral_code && (
           <div>
-            <h3 style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Invite & Earn</h3>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(212,163,84,0.3)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ color: 'var(--foreground)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Invite & Earn</h3>
+            <div style={{ background: 'var(--card)', border: '1px dashed rgba(212,163,84,0.3)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 4 }}>Your Referral Code</p>
-                <p style={{ color: '#d4a354', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.1em' }}>{userProfile.referral_code}</p>
+                <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 12, marginBottom: 4 }}>Your Referral Code</p>
+                <p style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.1em' }}>{userProfile.referral_code}</p>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleCopyCode} style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(212,163,84,0.1)', border: 'none', color: '#d4a354', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <button onClick={handleCopyCode} style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(198,139,53,0.08)', border: 'none', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
                 <button onClick={handleShare} style={{ width: 40, height: 40, borderRadius: 10, background: '#d4a354', border: 'none', color: '#1b1208', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -421,13 +421,13 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 8 }}>Get 50 points when a friend uses your code to sign up!</p>
+            <p style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 11, marginTop: 8 }}>Get 50 points when a friend uses your code to sign up!</p>
           </div>
         )}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 600 }}>Saved Coordinates</h3>
-            <button onClick={() => setShowAddAddress(!showAddAddress)} style={{ background: 'rgba(212,163,84,0.1)', border: '1px solid rgba(212,163,84,0.3)', borderRadius: 12, padding: '4px 12px', color: '#d4a354', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            <h3 style={{ color: 'var(--foreground)', fontSize: 15, fontWeight: 600 }}>Saved Coordinates</h3>
+            <button onClick={() => setShowAddAddress(!showAddAddress)} style={{ background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)', borderRadius: 12, padding: '4px 12px', color: 'var(--primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               {showAddAddress ? 'Cancel' : '+ Add'}
             </button>
           </div>
@@ -435,14 +435,14 @@ export default function ProfilePage() {
           <AnimatePresence>
             {showAddAddress && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', marginBottom: 16 }}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 16, padding: 16 }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 16 }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                     {(['Home', 'Hostel', 'Library', 'Classroom', 'Other'] as const).map(lbl => (
-                      <button key={lbl} onClick={() => setNewAddrLabel(lbl)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, border: `1px solid ${newAddrLabel === lbl ? 'rgba(212,163,84,0.4)' : 'rgba(255,255,255,0.1)'}`, background: newAddrLabel === lbl ? 'rgba(212,163,84,0.15)' : 'transparent', color: newAddrLabel === lbl ? '#d4a354' : 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>{lbl}</button>
+                      <button key={lbl} onClick={() => setNewAddrLabel(lbl)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, border: `1px solid ${newAddrLabel === lbl ? 'rgba(212,163,84,0.4)' : 'var(--border)'}`, background: newAddrLabel === lbl ? 'rgba(212,163,84,0.15)' : 'transparent', color: newAddrLabel === lbl ? '#d4a354' : 'var(--muted-foreground)', cursor: 'pointer' }}>{lbl}</button>
                     ))}
                   </div>
                   {newAddrLabel === 'Other' && (
-                    <input type="text" placeholder="Custom Label (e.g., GF's Hostel)" value={newCustomLabel} onChange={e => setNewCustomLabel(e.target.value)} style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 12px', borderRadius: 8, color: '#fff', fontSize: 13, marginBottom: 12, outline: 'none' }} />
+                    <input type="text" placeholder="Custom Label (e.g., GF's Hostel)" value={newCustomLabel} onChange={e => setNewCustomLabel(e.target.value)} style={{ width: '100%', background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', fontSize: 13, marginBottom: 12, outline: 'none' }} />
                   )}
                   
                   {errorMsg && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{errorMsg}</p>}
@@ -453,7 +453,7 @@ export default function ProfilePage() {
 
                   {coordinates && (
                     <div style={{ marginBottom: 16 }}>
-                      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 8, textAlign: 'center' }}>Drag the map or search to adjust your exact location</p>
+                      <p style={{ color: 'var(--muted-foreground)', fontSize: 11, marginBottom: 8, textAlign: 'center' }}>Drag the map or search to adjust your exact location</p>
                       <LocationPickerMap 
                         lat={coordinates.lat} 
                         lng={coordinates.lng} 
@@ -473,20 +473,20 @@ export default function ProfilePage() {
                   )}
 
                   <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                    <input type="text" placeholder="Flat / Room No." value={newFlatNo} onChange={e => setNewFlatNo(e.target.value)} style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }} />
-                    <input type="text" placeholder="Floor (Optional)" value={newFloor} onChange={e => setNewFloor(e.target.value)} style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }} />
+                    <input type="text" placeholder="Flat / Room No." value={newFlatNo} onChange={e => setNewFlatNo(e.target.value)} style={{ flex: 1, background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', fontSize: 13, outline: 'none' }} />
+                    <input type="text" placeholder="Floor (Optional)" value={newFloor} onChange={e => setNewFloor(e.target.value)} style={{ flex: 1, background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', fontSize: 13, outline: 'none' }} />
                   </div>
-                  <input type="text" placeholder="Area / Building / Campus" value={newArea} onChange={e => setNewArea(e.target.value)} style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 12px', borderRadius: 8, color: '#fff', fontSize: 13, marginBottom: 12, outline: 'none' }} />
-                  <input type="text" placeholder="Landmark (Optional)" value={newLandmark} onChange={e => setNewLandmark(e.target.value)} style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 12px', borderRadius: 8, color: '#fff', fontSize: 13, marginBottom: 16, outline: 'none' }} />
+                  <input type="text" placeholder="Area / Building / Campus" value={newArea} onChange={e => setNewArea(e.target.value)} style={{ width: '100%', background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', fontSize: 13, marginBottom: 12, outline: 'none' }} />
+                  <input type="text" placeholder="Landmark (Optional)" value={newLandmark} onChange={e => setNewLandmark(e.target.value)} style={{ width: '100%', background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', padding: '10px 12px', borderRadius: 8, color: 'var(--foreground)', fontSize: 13, marginBottom: 16, outline: 'none' }} />
                   <button onClick={handleSaveNewAddress} style={{ width: '100%', background: '#d4a354', color: '#1b1208', border: 'none', padding: '10px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save Address</button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
           {!userProfile.addresses || userProfile.addresses.length === 0 ? (
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+            <div style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px dashed var(--border)', borderRadius: 12, padding: 20, textAlign: 'center' }}>
               <MapPin size={24} color="rgba(255,255,255,0.2)" style={{ margin: '0 auto 8px' }} />
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>No saved addresses yet. Save your coordinate during checkout!</p>
+              <p style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 12 }}>No saved addresses yet. Save your coordinate during checkout!</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -498,14 +498,14 @@ export default function ProfilePage() {
                 else if (addr.label === 'Classroom') IconComponent = GraduationCap;
 
                 return (
-                  <div key={addr.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+                  <div key={addr.id} style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid rgba(var(--foreground-rgb), 0.05)', borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <div style={{ background: 'rgba(212,163,84,0.1)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 10, padding: 8, color: '#d4a354', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)', borderRadius: 10, padding: 8, color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <IconComponent size={16} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: '0.05em' }}>{addr.label}</p>
-                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2, lineHeight: '1.4' }}>{addr.fullAddress}</p>
+                        <p style={{ color: 'var(--foreground)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: '0.05em' }}>{addr.label}</p>
+                        <p style={{ color: 'var(--muted-foreground)', fontSize: 12, marginTop: 2, lineHeight: '1.4' }}>{addr.fullAddress}</p>
                       </div>
                     </div>
                     
@@ -520,7 +520,7 @@ export default function ProfilePage() {
                           console.error("Failed to delete saved address from profile: ", err);
                         }
                       }}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', padding: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ background: 'none', border: 'none', color: 'rgba(var(--foreground-rgb), 0.3)', padding: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -534,16 +534,16 @@ export default function ProfilePage() {
         {/* Active Orders */}
         {activeOrders.length > 0 && (
           <div>
-            <h3 style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Active Orders</h3>
+            <h3 style={{ color: 'var(--foreground)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Active Orders</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {activeOrders.map(order => (
-                <div key={order.order_id} style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 12, padding: 16 }}>
+                <div key={order.order_id} style={{ background: 'linear-gradient(135deg, rgba(var(--foreground-rgb), 0.05), rgba(var(--foreground-rgb), 0.02))', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                      <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 11 }}>
                         {order.order_type === 'delivery' ? 'Order ID' : 'Order Token'}
                       </p>
-                      <p style={{ color: '#fff', fontSize: order.order_type === 'delivery' ? 14 : 18, fontWeight: 700, fontFamily: 'monospace' }}>
+                      <p style={{ color: 'var(--foreground)', fontSize: order.order_type === 'delivery' ? 14 : 18, fontWeight: 700, fontFamily: 'monospace' }}>
                         #{order.order_type === 'delivery' ? order.order_id : order.token_number}
                       </p>
                     </div>
@@ -551,7 +551,7 @@ export default function ProfilePage() {
                       {order.status}
                     </div>
                   </div>
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{order.items.length} items • ₹{order.gross_amount}</p>
+                  <p style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>{order.items.length} items • ₹{order.gross_amount}</p>
                 </div>
               ))}
             </div>
@@ -561,7 +561,7 @@ export default function ProfilePage() {
         {/* Order History */}
         {orders.length > 0 && (
           <div ref={ordersRef} style={{ scrollMarginTop: '20px' }}>
-            <h3 style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Past Orders</h3>
+            <h3 style={{ color: 'var(--foreground)', fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Past Orders</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '600px', overflowY: 'auto', paddingRight: 4 }}>
               {orders.map(order => {
                 const isExpanded = expandedOrder === order.order_id;
@@ -569,18 +569,18 @@ export default function ProfilePage() {
                 const fs = feedbackState[order.order_id] || { rating: 0, comment: '', submitting: false };
                 
                 return (
-                  <div key={order.order_id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden' }}>
+                  <div key={order.order_id} style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid rgba(var(--foreground-rgb), 0.05)', borderRadius: 12, overflow: 'hidden' }}>
                     <div 
                       onClick={() => setExpandedOrder(isExpanded ? null : order.order_id)}
                       style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                     >
                       <div>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{date} • ₹{order.gross_amount}</p>
-                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4 }}>{order.items.length} items • {order.order_type}</p>
+                        <p style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 500 }}>{date} • ₹{order.gross_amount}</p>
+                        <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 12, marginTop: 4 }}>{order.items.length} items • {order.order_type}</p>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ color: statusColors[order.status], fontSize: 12, textTransform: 'capitalize' }}>{order.status}</span>
-                        {isExpanded ? <ChevronUp size={16} color="rgba(255,255,255,0.4)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.4)" />}
+                        {isExpanded ? <ChevronUp size={16} color="rgba(var(--foreground-rgb), 0.4)" /> : <ChevronDown size={16} color="rgba(var(--foreground-rgb), 0.4)" />}
                       </div>
                     </div>
                     
@@ -591,12 +591,12 @@ export default function ProfilePage() {
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                         >
-                            <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(var(--foreground-rgb), 0.05)' }}>
                               <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 {order.items.map((item, i) => (
                                   <li key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                                    <span style={{ color: 'rgba(255,255,255,0.8)' }}>{item.quantity}x {item.name}</span>
-                                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>₹{item.unit_price * item.quantity}</span>
+                                    <span style={{ color: 'rgba(var(--foreground-rgb), 0.8)' }}>{item.quantity}x {item.name}</span>
+                                    <span style={{ color: 'rgba(var(--foreground-rgb), 0.5)' }}>₹{item.unit_price * item.quantity}</span>
                                   </li>
                                 ))}
                               </ul>
@@ -605,7 +605,7 @@ export default function ProfilePage() {
                               {order.status === 'delivered' && (
                                 <div style={{ marginTop: 16 }}>
                                   {order.feedback ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'rgba(212,163,84,0.08)', borderRadius: 10, border: '1px solid rgba(212,163,84,0.15)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'rgba(198,139,53,0.08)', borderRadius: 10, border: '1px solid var(--border)' }}>
                                       {[1,2,3,4,5].map(s => (
                                         <Star key={s} size={14}
                                           fill={s <= order.feedback!.rating ? '#d4a354' : 'transparent'}
@@ -613,16 +613,16 @@ export default function ProfilePage() {
                                           strokeWidth={1.5}
                                         />
                                       ))}
-                                      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginLeft: 4 }}>Reviewed</span>
+                                      <span style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 12, marginLeft: 4 }}>Reviewed</span>
                                     </div>
                                   ) : (
                                     <button
                                       onClick={e => { e.stopPropagation(); setFeedbackOrder(order); }}
                                       style={{
                                         width: '100%', padding: '10px 0',
-                                        borderRadius: 10, border: '1px solid rgba(212,163,84,0.3)',
+                                        borderRadius: 10, border: '1px solid var(--border)',
                                         background: 'rgba(212,163,84,0.07)',
-                                        color: '#d4a354', fontSize: 13, fontWeight: 600,
+                                        color: 'var(--primary)', fontSize: 13, fontWeight: 600,
                                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                                       }}
                                     >
@@ -668,23 +668,23 @@ export default function ProfilePage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              style={{ background: '#120a06', borderTop: '1px solid rgba(212,163,84,0.2)', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80vh', overflowY: 'auto' }}
+              style={{ background: 'var(--card)', borderTop: '1px solid rgba(212,163,84,0.2)', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80vh', overflowY: 'auto' }}
               onClick={e => e.stopPropagation()}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f7dec4', fontFamily: 'var(--font-fable-noir), serif' }}>Points Ledger</h2>
-                <button onClick={() => setShowPointsHistory(false)} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>&times;</button>
+                <button onClick={() => setShowPointsHistory(false)} style={{ color: 'rgba(var(--foreground-rgb), 0.5)', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>&times;</button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {ledgerHistory.length === 0 ? (
-                  <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', py: 20 }}>No transaction history found.</p>
+                  <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', textAlign: 'center', paddingTop: 20, paddingBottom: 20 }}>No transaction history found.</p>
                 ) : (
                   ledgerHistory.map((tx, idx) => (
-                    <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'var(--card)', borderRadius: 12, border: '1px solid rgba(var(--foreground-rgb), 0.05)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span style={{ color: '#fff', fontSize: 14, fontWeight: 500, textTransform: 'capitalize' }}>{tx.source}</span>
-                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'monospace' }}>
+                        <span style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 500, textTransform: 'capitalize' }}>{tx.source}</span>
+                        <span style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 11, fontFamily: 'monospace' }}>
                           {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </div>
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                         <span style={{ color: tx.amount > 0 ? '#10b981' : '#ef4444', fontWeight: 700, fontSize: 16 }}>
                           {tx.amount > 0 ? '+' : ''}{tx.amount}
                         </span>
-                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, textTransform: 'uppercase' }}>pts</span>
+                        <span style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 10, textTransform: 'uppercase' }}>pts</span>
                       </div>
                     </div>
                   ))

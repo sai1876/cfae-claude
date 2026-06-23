@@ -17,7 +17,8 @@ import {
   Loader2,
   Key,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
@@ -25,11 +26,17 @@ import { useStore } from '@/store/useStore';
 // Get backend URL from env or default to localhost:8000 (FastAPI engine)
 const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL || 'http://localhost:8000';
 
-export default function AuthWorkspace() {
+interface AuthWorkspaceProps {
+  defaultTab?: 'signup' | 'login';
+  isModal?: boolean;
+  onClose?: () => void;
+}
+
+export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, onClose }: AuthWorkspaceProps) {
   const { setUser, setUserProfile } = useStore();
   
   // Tab: 'login' or 'signup'
-  const [tab, setTab] = useState<'login' | 'signup'>('signup');
+  const [tab, setTab] = useState<'login' | 'signup'>(defaultTab);
   
   // Signup State Machine Steps: 'phone' | 'handshake' | 'profile' | 'lockout' | 'dashboard'
   const [signupStep, setSignupStep] = useState<'phone' | 'handshake' | 'profile' | 'lockout' | 'dashboard'>('phone');
@@ -351,9 +358,13 @@ export default function AuthWorkspace() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#060403] text-[#f7dec4] flex flex-col relative overflow-x-hidden overflow-y-auto font-sans p-6 py-12">
-      <div className="absolute top-[-20%] left-[-20%] w-[550px] h-[550px] bg-[#f8bc51]/5 rounded-full filter blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[550px] h-[550px] bg-[#E8621A]/5 rounded-full filter blur-[120px] pointer-events-none" />
+    <div className={isModal ? "w-full" : "min-h-[100dvh] w-full bg-[#060403] text-[#f7dec4] flex flex-col relative overflow-x-hidden overflow-y-auto font-sans p-6 py-12"}>
+      {!isModal && (
+        <>
+          <div className="absolute top-[-20%] left-[-20%] w-[550px] h-[550px] bg-[#f8bc51]/5 rounded-full filter blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-20%] right-[-20%] w-[550px] h-[550px] bg-[#E8621A]/5 rounded-full filter blur-[120px] pointer-events-none" />
+        </>
+      )}
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.97 }}
@@ -387,6 +398,16 @@ export default function AuthWorkspace() {
 
         {/* MAIN PANEL CONTENT */}
         <div className="bg-[#120a06]/55 backdrop-blur-2xl rounded-3xl border border-[#302117]/80 p-8 shadow-2xl relative">
+          {isModal && onClose && (
+            <button 
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 text-[#d4c4b0]/40 hover:text-white rounded-full transition-colors z-20"
+              aria-label="Close modal"
+              type="button"
+            >
+              <X size={16} />
+            </button>
+          )}
           
           <AnimatePresence mode="wait">
             
@@ -724,6 +745,14 @@ export default function AuthWorkspace() {
                   >
                     <Key size={12} /> Option B: Passwordless WhatsApp Login
                   </button>
+                  <div className="text-center mt-2">
+                    <a
+                      href="/login?staff=true"
+                      className="text-[9px] font-mono uppercase tracking-wider text-[#d4c4b0]/40 hover:text-[#f8bc51] transition-colors"
+                    >
+                      Operational Staff? Login here
+                    </a>
+                  </div>
                 </div>
               </motion.form>
             )}

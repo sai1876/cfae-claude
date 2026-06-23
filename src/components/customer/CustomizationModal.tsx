@@ -146,17 +146,17 @@ export default function CustomizationModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="fixed bottom-0 left-0 right-0 z-[100] max-w-[600px] mx-auto bg-surface/80 backdrop-blur-3xl rounded-t-[40px] border-t border-white/10 shadow-[0_-15px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[95dvh]"
+            className="fixed bottom-0 left-0 right-0 z-[100] max-w-[600px] mx-auto bg-surface/80 backdrop-blur-3xl rounded-t-[40px] border-t border-border shadow-[0_-15px_60px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col max-h-[95dvh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-8 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
+            <div className="flex items-center justify-between p-8 border-b border-border/50 bg-gradient-to-b from-foreground/5 to-transparent">
               <div>
                 <span className="font-mono text-[10px] tracking-widest uppercase text-primary mb-2 block opacity-80">Customize Selection</span>
                 <h3 className="font-serif italic text-3xl text-on-surface leading-tight">{item.name}</h3>
               </div>
               <button
                 onClick={onClose}
-                className="p-3 bg-white/5 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-white/10 transition-colors border border-white/5"
+                className="p-3 bg-foreground/5 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-foreground/10 transition-colors border border-border/50"
               >
                 <X size={20} />
               </button>
@@ -286,19 +286,19 @@ export default function CustomizationModal({
             </div>
 
             {/* Bottom Actions Footer */}
-            <div className="p-6 border-t border-white/10 flex gap-4 items-center bg-black/20 backdrop-blur-md">
+            <div className="p-6 border-t border-border flex gap-4 items-center bg-background/80 backdrop-blur-md">
                 {/* Quantity */}
-                <div className="flex items-center bg-white/5 rounded-full border border-white/10 p-1">
+                <div className="flex items-center bg-foreground/5 rounded-full border border-border p-1">
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-10 h-10 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-white/10 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-foreground/10 flex items-center justify-center transition-colors"
                   >
                     -
                   </button>
                   <span className="w-8 text-center text-on-surface font-bold">{quantity}</span>
                   <button
                     onClick={() => setQuantity(q => q + 1)}
-                    className="w-10 h-10 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-white/10 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-foreground/10 flex items-center justify-center transition-colors"
                   >
                     +
                   </button>
@@ -310,7 +310,7 @@ export default function CustomizationModal({
                   className="relative flex-1 group overflow-hidden rounded-full p-[1px]"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-primary via-amber-400 to-primary rounded-full opacity-70 group-hover:opacity-100 blur-[2px] transition-opacity" />
-                  <div className="relative py-4 bg-primary text-primary-foreground font-bold rounded-full hover:shadow-[0_0_30px_rgba(248,188,81,0.5)] transition-all flex items-center justify-between px-8 bg-gradient-to-r from-primary to-amber-500">
+                  <div className="relative py-4 bg-primary text-primary-foreground font-bold rounded-full hover:shadow-[0_0_30px_rgba(198,139,53,0.35)] transition-all flex items-center justify-between px-8 bg-gradient-to-r from-primary to-amber-500">
                     <span className="tracking-wide uppercase text-sm">Add to Cart</span>
                     <span className="font-mono text-lg">₹{totalPrice}</span>
                   </div>

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, ArrowRight, Tag, Info, RotateCw, MapPin, CheckCircle2, AlertCircle, X, PartyPopper, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { createOrder, updateUserProfile, fetchOutlets, fetchOffers, fetchMenuItems } from '@/lib/dbService';
 import { SavedAddress } from '@/lib/types';
 
@@ -235,9 +237,6 @@ export default function CartPage() {
     if (userProfile?.user_id) {
       const fetchLedger = async () => {
         try {
-          const { db } = await import('@/lib/firebase');
-          const { collection, query, where, getDocs } = await import('firebase/firestore');
-          
           const q = query(
             collection(db, 'point_ledger'),
             where('user_id', '==', userProfile.user_id)
@@ -611,7 +610,7 @@ export default function CartPage() {
 
   if (success) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0e0b07', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ minHeight: '100vh', background: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -620,18 +619,18 @@ export default function CartPage() {
         >
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </motion.div>
-        <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 700, marginBottom: 10 }}>Order Placed!</h2>
-        <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>Your order is being sent to the kitchen.</p>
+        <h2 style={{ color: 'var(--foreground)', fontSize: 24, fontWeight: 700, marginBottom: 10 }}>Order Placed!</h2>
+        <p style={{ color: 'var(--muted-foreground)', textAlign: 'center' }}>Your order is being sent to the kitchen.</p>
       </div>
     );
   }
 
   if (cart.length === 0) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0e0b07', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', paddingTop: '30vh' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', paddingTop: '30vh' }}>
         <span style={{ fontSize: 70, marginBottom: 20 }}>🥣</span>
-        <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Cart's lonely yaar!</h2>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginBottom: 30 }}>Add some delicious food to make it happy.</p>
+        <h2 style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Cart's lonely yaar!</h2>
+        <p style={{ color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 14, marginBottom: 30 }}>Add some delicious food to make it happy.</p>
         <button
           onClick={() => router.push('/menu')}
           style={{ background: '#d4a354', color: '#1b1208', border: 'none', padding: '12px 24px', borderRadius: 24, fontWeight: 700, cursor: 'pointer' }}
@@ -643,12 +642,12 @@ export default function CartPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0b07', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--background)', paddingBottom: 100 }}>
       {/* Header */}
       <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(212,163,84,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: 0 }}>Your Order</h1>
-          <p style={{ color: '#d4a354', fontSize: 12, margin: '2px 0 0' }}>{cart.reduce((s,i) => s + i.quantity, 0)} items</p>
+          <h1 style={{ color: 'var(--foreground)', fontSize: 24, fontWeight: 700, margin: 0 }}>Your Order</h1>
+          <p style={{ color: 'var(--primary)', fontSize: 12, margin: '2px 0 0' }}>{cart.reduce((s,i) => s + i.quantity, 0)} items</p>
         </div>
         
         {/* Dynamic Outlet Selector */}
@@ -670,10 +669,10 @@ export default function CartPage() {
               paddingRight: 4
             }}
           >
-            <option value="HYD CAMPUS" style={{ background: '#0e0b07', color: '#fff' }}>HYD CAMPUS</option>
+            <option value="HYD CAMPUS" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>HYD CAMPUS</option>
             {outlets.map(o => (
               o.name !== 'HYD CAMPUS' && (
-                <option key={o.id} value={o.name} style={{ background: '#0e0b07', color: '#fff' }}>
+                <option key={o.id} value={o.name} style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
                   {o.name.toUpperCase()}
                 </option>
               )
@@ -684,7 +683,7 @@ export default function CartPage() {
 
       <div style={{ padding: 16 }}>
         {/* Order Type Toggle */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 4, marginBottom: 24, border: '1px solid rgba(212,163,84,0.1)' }}>
+        <div style={{ display: 'flex', background: 'rgba(var(--foreground-rgb), 0.04)', borderRadius: 12, padding: 4, marginBottom: 24, border: '1px solid var(--border)' }}>
           {(['dine-in', 'pickup', 'delivery'] as const).map(type => {
             const isSelected = orderType === type;
             return (
@@ -694,7 +693,7 @@ export default function CartPage() {
                 style={{
                   flex: 1, padding: '10px 0', borderRadius: 8, cursor: 'pointer',
                   border: 'none', background: isSelected ? 'rgba(212,163,84,0.15)' : 'transparent',
-                  color: isSelected ? '#d4a354' : 'rgba(255,255,255,0.6)',
+                  color: isSelected ? '#d4a354' : 'var(--muted-foreground)',
                   fontWeight: isSelected ? 600 : 400, textTransform: 'capitalize', fontSize: 13,
                 }}
               >
@@ -706,11 +705,11 @@ export default function CartPage() {
 
           {/* Pickup Hatch Selection */}
           {orderType === 'pickup' && availableHatches.length > 0 && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
-              <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Select Pickup Point</h3>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
+              <h3 style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Select Pickup Point</h3>
               <div style={{ display: 'grid', gap: 8 }}>
                 {availableHatches.map(hatch => (
-                  <label key={hatch} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: selectedHatch === hatch ? 'rgba(212,163,84,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${selectedHatch === hatch ? 'rgba(212,163,84,0.4)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 12, cursor: 'pointer' }}>
+                  <label key={hatch} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: selectedHatch === hatch ? 'rgba(212,163,84,0.1)' : 'rgba(var(--foreground-rgb), 0.02)', border: `1px solid ${selectedHatch === hatch ? 'rgba(212,163,84,0.4)' : 'rgba(var(--foreground-rgb), 0.05)'}`, borderRadius: 12, cursor: 'pointer' }}>
                     <input type="radio" name="hatch" value={hatch} checked={selectedHatch === hatch} onChange={() => setSelectedHatch(hatch)} style={{ accentColor: '#d4a354' }} />
                     <span style={{ color: selectedHatch === hatch ? '#d4a354' : '#fff', fontSize: 13, fontWeight: selectedHatch === hatch ? 600 : 400 }}>{hatch}</span>
                   </label>
@@ -721,30 +720,30 @@ export default function CartPage() {
 
           {/* Dine-in Table Number */}
           {orderType === 'dine-in' && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
-              <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Table Number</h3>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
+              <h3 style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, margin: '0 0 12px 0' }}>Table Number</h3>
               <input
                 type="text"
                 placeholder="e.g. T-12 or 4"
                 value={tableNo}
                 onChange={(e) => setTableNo(e.target.value)}
-                style={{ width: '100%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '12px 16px', color: '#fff', outline: 'none' }}
+                style={{ width: '100%', background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', borderRadius: 8, padding: '12px 16px', color: 'var(--foreground)', outline: 'none' }}
               />
             </div>
           )}
 
           {/* Delivery Address Form */}
         {orderType === 'delivery' && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: 0 }}>Delivery Address</h3>
+              <h3 style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, margin: 0 }}>Delivery Address</h3>
               {errorMsg && <span style={{ color: '#ef4444', fontSize: 11 }}>⚠️ {errorMsg}</span>}
             </div>
             
             {/* Saved Addresses List (if available and user is authenticated) */}
             {user && userProfile?.addresses && userProfile.addresses.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontWeight: 600 }}>Saved Coordinates</p>
+                <p style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontWeight: 600 }}>Saved Coordinates</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {userProfile.addresses.map((addr) => {
                     const isSelected = selectedAddressId === addr.id && !isAddingNewAddress;
@@ -758,14 +757,14 @@ export default function CartPage() {
                           setErrorMsg('');
                         }}
                         style={{
-                          padding: 12, borderRadius: 12, border: `1px solid ${isSelected ? '#d4a354' : 'rgba(255,255,255,0.06)'}`,
-                          background: isSelected ? 'rgba(212,163,84,0.08)' : 'rgba(255,255,255,0.01)',
+                          padding: 12, borderRadius: 12, border: `1px solid ${isSelected ? '#d4a354' : 'var(--border)'}`,
+                          background: isSelected ? 'rgba(212,163,84,0.08)' : 'rgba(var(--foreground-rgb), 0.01)',
                           cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                         }}
                       >
                         <div style={{ flex: 1, paddingRight: 10 }}>
                           <p style={{ color: isSelected ? '#d4a354' : '#fff', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', fontFamily: 'monospace' }}>{addr.label}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>{addr.fullAddress}</p>
+                          <p style={{ color: 'var(--muted-foreground)', fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>{addr.fullAddress}</p>
                         </div>
                         <button
                           onClick={async (e) => {
@@ -784,7 +783,7 @@ export default function CartPage() {
                               console.error(err);
                             }
                           }}
-                          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: 4 }}
+                          style={{ background: 'none', border: 'none', color: 'rgba(var(--foreground-rgb), 0.3)', cursor: 'pointer', padding: 4 }}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -798,8 +797,8 @@ export default function CartPage() {
                     }}
                     style={{
                       background: isAddingNewAddress ? 'rgba(212,163,84,0.05)' : 'none',
-                      border: `1px dashed ${isAddingNewAddress ? '#d4a354' : 'rgba(255,255,255,0.15)'}`,
-                      color: isAddingNewAddress ? '#d4a354' : 'rgba(255,255,255,0.6)',
+                      border: `1px dashed ${isAddingNewAddress ? '#d4a354' : 'var(--border)'}`,
+                      color: isAddingNewAddress ? '#d4a354' : 'var(--muted-foreground)',
                       padding: 10, borderRadius: 12, cursor: 'pointer', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', fontFamily: 'monospace'
                     }}
                   >
@@ -815,8 +814,8 @@ export default function CartPage() {
                 
                 {/* Form Header with Back to Saved Option */}
                 {user && userProfile?.addresses && userProfile.addresses.length > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 6 }}>
-                    <span style={{ color: '#d4a354', fontSize: 10, fontFamily: 'monospace', textTransform: 'uppercase', fontWeight: 700 }}>New Location</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
+                    <span style={{ color: 'var(--primary)', fontSize: 10, fontFamily: 'monospace', textTransform: 'uppercase', fontWeight: 700 }}>New Location</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -827,7 +826,7 @@ export default function CartPage() {
                           setDeliveryAddress(first.fullAddress);
                         }
                       }}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}
+                      style={{ background: 'none', border: 'none', color: 'rgba(var(--foreground-rgb), 0.4)', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}
                     >
                       ← Use Saved Addresses
                     </button>
@@ -840,8 +839,8 @@ export default function CartPage() {
                   onClick={handleAutoFetchLocation}
                   disabled={gpsLoading}
                   style={{
-                    width: '100%', background: 'rgba(212,163,84,0.05)', border: '1px solid rgba(212,163,84,0.3)',
-                    color: '#d4a354', padding: '10px', borderRadius: 8, fontWeight: 700, cursor: 'pointer',
+                    width: '100%', background: 'rgba(198,139,53,0.05)', border: '1px solid var(--border)',
+                    color: 'var(--primary)', padding: '10px', borderRadius: 8, fontWeight: 700, cursor: 'pointer',
                     fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                   }}
                 >
@@ -870,55 +869,55 @@ export default function CartPage() {
 
                 {/* Flat / Room No */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Flat / Hostel & Room *</label>
+                  <label style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Flat / Hostel & Room *</label>
                   <input
                     type="text"
                     value={flatNo}
                     onChange={(e) => setFlatNo(e.target.value)}
                     placeholder="e.g. Room 302, Hostel 5"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, color: '#fff', outline: 'none', fontSize: 12 }}
+                    style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 10, padding: 10, color: 'var(--foreground)', outline: 'none', fontSize: 12 }}
                   />
                 </div>
 
                 {/* Floor / Wing */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Floor / Wing (Optional)</label>
+                  <label style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Floor / Wing (Optional)</label>
                   <input
                     type="text"
                     value={floor}
                     onChange={(e) => setFloor(e.target.value)}
                     placeholder="e.g. 3rd Floor"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, color: '#fff', outline: 'none', fontSize: 12 }}
+                    style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 10, padding: 10, color: 'var(--foreground)', outline: 'none', fontSize: 12 }}
                   />
                 </div>
 
                 {/* Landmark */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Nearby Landmark (Optional)</label>
+                  <label style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Nearby Landmark (Optional)</label>
                   <input
                     type="text"
                     value={landmark}
                     onChange={(e) => setLandmark(e.target.value)}
                     placeholder="e.g. Near Mess Gate"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, color: '#fff', outline: 'none', fontSize: 12 }}
+                    style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 10, padding: 10, color: 'var(--foreground)', outline: 'none', fontSize: 12 }}
                   />
                 </div>
 
                 {/* Campus Location */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Campus Area / Location *</label>
+                  <label style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Campus Area / Location *</label>
                   <input
                     type="text"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
                     placeholder="e.g. IIT Campus, Library Lawn"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, color: '#fff', outline: 'none', fontSize: 12 }}
+                    style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 10, padding: 10, color: 'var(--foreground)', outline: 'none', fontSize: 12 }}
                   />
                 </div>
 
                 {/* Labels Selector */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                  <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Address Type / Label</label>
+                  <label style={{ color: 'rgba(var(--foreground-rgb), 0.5)', fontSize: 10, textTransform: 'uppercase', fontFamily: 'monospace' }}>Address Type / Label</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {(['Hostel', 'Library', 'Classroom', 'Home', 'Other'] as const).map((lbl) => {
                       const isSelected = addressLabel === lbl;
@@ -928,9 +927,9 @@ export default function CartPage() {
                           type="button"
                           onClick={() => setAddressLabel(lbl)}
                           style={{
-                            background: isSelected ? '#d4a354' : 'rgba(255,255,255,0.04)',
-                            border: `1px solid ${isSelected ? '#d4a354' : 'rgba(255,255,255,0.08)'}`,
-                            color: isSelected ? '#1b1208' : 'rgba(255,255,255,0.6)',
+                            background: isSelected ? '#d4a354' : 'rgba(var(--foreground-rgb), 0.04)',
+                            border: `1px solid ${isSelected ? '#d4a354' : 'var(--border)'}`,
+                            color: isSelected ? '#1b1208' : 'var(--muted-foreground)',
                             padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', fontFamily: 'monospace'
                           }}
                         >
@@ -947,14 +946,14 @@ export default function CartPage() {
                       onChange={(e) => setCustomLabel(e.target.value)}
                       placeholder="Enter custom label e.g., Labs"
                       maxLength={15}
-                      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, color: '#fff', outline: 'none', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase', marginTop: 4 }}
+                      style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 8, padding: 8, color: 'var(--foreground)', outline: 'none', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase', marginTop: 4 }}
                     />
                   )}
                 </div>
 
                 {/* Save checkbox (only visible if logged in) */}
                 {user && (
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.6)', fontSize: 11, cursor: 'pointer', userSelect: 'none', marginTop: 6 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted-foreground)', fontSize: 11, cursor: 'pointer', userSelect: 'none', marginTop: 6 }}>
                     <input
                       type="checkbox"
                       checked={saveToProfile}
@@ -983,37 +982,37 @@ export default function CartPage() {
             const itemDiscountedPrice = itemOriginalPrice * (1 - promoDiscountPercent / 100);
 
             return (
-              <div key={item.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(212,163,84,0.08)', borderRadius: 16, padding: 16 }}>
+              <div key={item.id} style={{ background: 'rgba(var(--foreground-rgb), 0.02)', border: '1px solid var(--border)', borderRadius: 16, padding: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <h3 style={{ color: '#fff', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{item.name}</h3>
+                    <h3 style={{ color: 'var(--foreground)', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{item.name}</h3>
                     {item.modifiers && item.modifiers.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
                         {item.modifiers.map(m => (
-                          <span key={m} style={{ background: 'rgba(212,163,84,0.1)', color: 'rgba(212,163,84,0.8)', fontSize: 10, padding: '2px 6px', borderRadius: 4 }}>{m}</span>
+                          <span key={m} style={{ background: 'rgba(198,139,53,0.08)', color: 'rgba(212,163,84,0.8)', fontSize: 10, padding: '2px 6px', borderRadius: 4 }}>{m}</span>
                         ))}
                       </div>
                     )}
                     <p style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: 14, display: 'flex', gap: 8, alignItems: 'center', margin: 0 }}>
                       {isDiscounted ? (
                         <>
-                          <span style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>₹{itemOriginalPrice}</span>
+                          <span style={{ color: 'rgba(var(--foreground-rgb), 0.4)', textDecoration: 'line-through' }}>₹{itemOriginalPrice}</span>
                           <span style={{ color: '#4ade80' }}>₹{itemDiscountedPrice.toFixed(2)}</span>
                         </>
                       ) : (
-                        <span style={{ color: '#d4a354' }}>₹{itemOriginalPrice}</span>
+                        <span style={{ color: 'var(--primary)' }}>₹{itemOriginalPrice}</span>
                       )}
                     </p>
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
-                    <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}>
+                    <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: 'rgba(var(--foreground-rgb), 0.3)', cursor: 'pointer' }}>
                       <Trash2 size={16} />
                     </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212,163,84,0.2)', borderRadius: 20, padding: '4px 8px' }}>
-                      <button onClick={() => updateQuantity(item.id, -1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 2 }}><Minus size={14} /></button>
-                      <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, minWidth: 16, textAlign: 'center' }}>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 2 }}><Plus size={14} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(var(--foreground-rgb), 0.04)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 8px' }}>
+                      <button onClick={() => updateQuantity(item.id, -1)} style={{ background: 'none', border: 'none', color: 'var(--foreground)', cursor: 'pointer', padding: 2 }}><Minus size={14} /></button>
+                      <span style={{ color: 'var(--foreground)', fontSize: 13, fontWeight: 600, minWidth: 16, textAlign: 'center' }}>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)} style={{ background: 'none', border: 'none', color: 'var(--foreground)', cursor: 'pointer', padding: 2 }}><Plus size={14} /></button>
                     </div>
                   </div>
                 </div>
@@ -1030,7 +1029,7 @@ export default function CartPage() {
               value={promoCode}
               onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
               placeholder="Have a promo code?"
-              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.15)', borderRadius: 12, padding: '12px 12px 12px 36px', color: '#fff', outline: 'none', textTransform: 'uppercase', boxSizing: 'border-box' }}
+              style={{ width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px 12px 36px', color: 'var(--foreground)', outline: 'none', textTransform: 'uppercase', boxSizing: 'border-box' }}
             />
           </div>
           <button
@@ -1043,12 +1042,12 @@ export default function CartPage() {
 
         {/* Points Redemption */}
         {userProfile && activeBalance > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(212,163,84,0.05)', border: '1px dashed rgba(212,163,84,0.2)', borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(198,139,53,0.05)', border: '1px dashed var(--primary)', borderRadius: 12, padding: 16, marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 24 }}>🪙</span>
               <div style={{ flex: 1 }}>
-                <p style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>Use Active Coins</p>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>Active Balance: {activeBalance} pts | Max usable: {maxRedeemablePoints} pts</p>
+                <p style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600 }}>Use Active Coins</p>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>Active Balance: {activeBalance} pts | Max usable: {maxRedeemablePoints} pts</p>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1064,24 +1063,24 @@ export default function CartPage() {
                   setPointsInput(val > 0 ? val.toString() : '');
                 }}
                 placeholder="Enter points to redeem"
-                style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,163,84,0.3)', borderRadius: 8, padding: '10px 12px', color: '#fff', outline: 'none' }}
+                style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', color: 'var(--foreground)', outline: 'none' }}
               />
               <button
                 onClick={() => setPointsInput(maxCanUse.toString())}
-                style={{ background: 'rgba(212,163,84,0.1)', border: '1px solid rgba(212,163,84,0.3)', color: '#d4a354', padding: '10px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
+                style={{ background: 'rgba(198,139,53,0.08)', border: '1px solid var(--border)', color: 'var(--primary)', padding: '10px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
               >
                 Max
               </button>
             </div>
-            <p style={{ color: '#d4a354', fontSize: 11 }}>* You can cover a maximum of 20% of your gross order value with coins.</p>
+            <p style={{ color: 'var(--primary)', fontSize: 11 }}>* You can cover a maximum of 20% of your gross order value with coins.</p>
           </div>
         )}
 
         {/* Bill Summary */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
-          <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Bill Summary</h3>
+        <div style={{ background: 'rgba(var(--foreground-rgb), 0.02)', borderRadius: 16, padding: 16, marginBottom: 24 }}>
+          <h3 style={{ color: 'var(--foreground)', fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Bill Summary</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted-foreground)', fontSize: 13 }}>
               <span>Gross Subtotal</span>
               <span>₹{subtotal}</span>
             </div>
@@ -1092,19 +1091,19 @@ export default function CartPage() {
               </div>
             )}
             {pointsDiscount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#d4a354', fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--primary)', fontSize: 13 }}>
                 <span>Wallet Discount Applied (Max 20%)</span>
                 <span>-₹{pointsDiscount.toFixed(2)}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted-foreground)', fontSize: 13 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Platform Fee <Info size={12} /></span>
               <span>₹{platformFee}</span>
             </div>
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: 16, fontWeight: 700 }}>
+            <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--foreground)', fontSize: 16, fontWeight: 700 }}>
               <span>Final Net Payable (80% min)</span>
-              <span style={{ color: '#d4a354', fontFamily: 'monospace', fontSize: 18 }}>₹{Math.round(total)}</span>
+              <span style={{ color: 'var(--primary)', fontFamily: 'monospace', fontSize: 18 }}>₹{Math.round(total)}</span>
             </div>
           </div>
         </div>
@@ -1114,8 +1113,8 @@ export default function CartPage() {
           onClick={handlePlaceOrder}
           disabled={isPlacingOrder}
           style={{
-            width: '100%', background: 'linear-gradient(135deg,#c49040,#8a5f1e)', border: 'none',
-            color: '#fff', padding: 16, borderRadius: 16, fontSize: 16, fontWeight: 700,
+            width: '100%', background: 'linear-gradient(135deg,#e2a855,#a26b1f)', border: 'none',
+            color: 'var(--foreground)', padding: 16, borderRadius: 16, fontSize: 16, fontWeight: 700,
             cursor: isPlacingOrder ? 'wait' : 'pointer', opacity: isPlacingOrder ? 0.7 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 8px 24px rgba(196,144,64,0.25)',
@@ -1144,7 +1143,7 @@ export default function CartPage() {
               maxWidth: '420px',
               margin: '0 auto',
               zIndex: 100000,
-              background: 'rgba(20, 16, 11, 0.92)',
+              background: 'rgba(var(--background-rgb), 0.92)',
               backdropFilter: 'blur(12px)',
               border: `1px solid ${
                 toast.type === 'success'
@@ -1173,7 +1172,7 @@ export default function CartPage() {
               {toast.type === 'error' && <AlertCircle size={22} color="#ef4444" />}
               {toast.type === 'info' && <Info size={22} color="#d4a354" />}
             </div>
-            <div style={{ flex: 1, color: '#fff', fontSize: '13.5px', fontWeight: 500, lineHeight: 1.4 }}>
+            <div style={{ flex: 1, color: 'var(--foreground)', fontSize: '13.5px', fontWeight: 500, lineHeight: 1.4 }}>
               {toast.message}
             </div>
             <button
@@ -1181,7 +1180,7 @@ export default function CartPage() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: 'rgba(255, 255, 255, 0.4)',
+                color: 'rgba(var(--foreground-rgb), 0.4)',
                 cursor: 'pointer',
                 padding: 4,
                 display: 'flex',
@@ -1191,12 +1190,12 @@ export default function CartPage() {
                 transition: 'background 0.2s'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.background = 'var(--border)';
                 e.currentTarget.style.color = '#fff';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'none';
-                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)';
+                e.currentTarget.style.color = 'rgba(var(--foreground-rgb), 0.4)';
               }}
             >
               <X size={16} />
@@ -1212,7 +1211,7 @@ export default function CartPage() {
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(7, 5, 3, 0.82)',
+              backgroundColor: 'rgba(var(--background-rgb), 0.82)',
               backdropFilter: 'blur(10px)',
               zIndex: 99998,
               display: 'flex',
@@ -1240,7 +1239,7 @@ export default function CartPage() {
             >
               <div
                 style={{
-                  background: 'radial-gradient(circle at 50% 0%, #1a130a, #070503)',
+                  background: 'var(--card)',
                   borderRadius: '22px',
                   padding: '36px 24px 28px',
                   textAlign: 'center',
@@ -1252,14 +1251,14 @@ export default function CartPage() {
                 <motion.div
                   animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ position: 'absolute', top: 24, left: 30, color: '#d4a354', opacity: 0.7 }}
+                  style={{ position: 'absolute', top: 24, left: 30, color: 'var(--primary)', opacity: 0.7 }}
                 >
                   <Sparkles size={16} />
                 </motion.div>
                 <motion.div
                   animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                  style={{ position: 'absolute', bottom: 110, right: 24, color: '#d4a354', opacity: 0.7 }}
+                  style={{ position: 'absolute', bottom: 110, right: 24, color: 'var(--primary)', opacity: 0.7 }}
                 >
                   <Sparkles size={14} />
                 </motion.div>
@@ -1300,7 +1299,7 @@ export default function CartPage() {
                     display: 'inline-block',
                     backgroundColor: 'rgba(212, 163, 84, 0.1)',
                     border: '1px solid rgba(212, 163, 84, 0.25)',
-                    color: '#d4a354',
+                    color: 'var(--primary)',
                     fontSize: '11px',
                     fontFamily: 'monospace',
                     fontWeight: 700,
@@ -1314,11 +1313,11 @@ export default function CartPage() {
                   Coupon Applied
                 </span>
 
-                <h3 style={{ color: '#fff', fontSize: '21px', fontWeight: 700, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
-                  Code <span style={{ color: '#d4a354' }}>'{appliedPromoDetails.code}'</span>
+                <h3 style={{ color: 'var(--foreground)', fontSize: '21px', fontWeight: 700, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
+                  Code <span style={{ color: 'var(--primary)' }}>'{appliedPromoDetails.code}'</span>
                 </h3>
                 
-                <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '13.5px', margin: '0 0 28px 0', fontWeight: 400 }}>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '13.5px', margin: '0 0 28px 0', fontWeight: 400 }}>
                   Congratulations! You unlocked {appliedPromoDetails.discountPercent}% OFF.
                 </p>
 
@@ -1368,7 +1367,7 @@ export default function CartPage() {
                     width: '100%',
                     background: 'linear-gradient(135deg, #d4a354, #8a5f1e)',
                     border: 'none',
-                    color: '#fff',
+                    color: 'var(--foreground)',
                     padding: '15px 20px',
                     borderRadius: '16px',
                     fontSize: '14.5px',

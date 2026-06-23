@@ -27,9 +27,9 @@ export default function CustomerLayout({
         setUser(null);
         setUserProfile(null);
       } else if (firebaseUser && user) {
-        // Force token refresh to detect if user was deleted from Firebase Console
+        // Fetch current ID token to verify authentication status
         try {
-          await firebaseUser.getIdToken(true);
+          await firebaseUser.getIdToken();
           
           // Check for student email verification updates
           if (firebaseUser.emailVerified && firebaseUser.email) {
@@ -62,6 +62,8 @@ export default function CustomerLayout({
   useEffect(() => {
     // If we've already entered in a previous session or if pathname isn't '/'
     if (pathname !== '/') {
+      setShowNavigation(true);
+    } else if (typeof window !== 'undefined' && sessionStorage.getItem('Hau Hau-intro-seen')) {
       setShowNavigation(true);
     }
 

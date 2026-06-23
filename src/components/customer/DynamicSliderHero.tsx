@@ -688,9 +688,9 @@ export default function DynamicSliderHero() {
                     className="bg-transparent text-[#e8621a] font-mono text-xs font-bold uppercase tracking-widest outline-none cursor-pointer appearance-none"
                     style={{ width: '100px' }}
                   >
-                    <option value="HYD CAMPUS" className="bg-[#060403] text-white">HYD CAMPUS</option>
+                    <option value="HYD CAMPUS" className="bg-card text-foreground">HYD CAMPUS</option>
                     {outlets.filter(o => o.name !== 'HYD CAMPUS').map(o => (
-                      <option key={o.id} value={o.name} className="bg-[#060403] text-white">
+                      <option key={o.id} value={o.name} className="bg-card text-foreground">
                         {o.name.toUpperCase()}
                       </option>
                     ))}

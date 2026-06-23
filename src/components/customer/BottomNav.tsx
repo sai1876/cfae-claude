@@ -21,10 +21,10 @@ export default function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe"
       style={{
-        background: 'rgba(14, 11, 7, 0.92)',
+        background: 'rgba(var(--background-rgb), 0.92)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderTop: '1px solid rgba(212,163,84,0.1)',
+        borderTop: '1px solid var(--border)',
       }}
     >
       <div className="flex items-center justify-around h-20 px-2">
@@ -43,7 +43,7 @@ export default function BottomNav() {
                 <motion.div
                   layoutId="nav-indicator"
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-full"
-                  style={{ background: '#d4a354' }}
+                  style={{ background: 'var(--primary)' }}
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}
@@ -52,7 +52,7 @@ export default function BottomNav() {
                 <Icon
                   size={22}
                   strokeWidth={isActive ? 2 : 1.5}
-                  style={{ color: isActive ? '#d4a354' : 'rgba(255,255,255,0.35)', transition: 'color 0.2s' }}
+                  style={{ color: isActive ? 'var(--primary)' : 'rgba(var(--foreground-rgb), 0.4)', transition: 'color 0.2s' }}
                 />
                 {/* Cart badge */}
                 {isCart && cartCount > 0 && (
@@ -61,7 +61,7 @@ export default function BottomNav() {
                     initial={{ scale: 0.5 }}
                     animate={{ scale: 1 }}
                     className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-[9px] font-bold"
-                    style={{ background: '#d4a354', color: '#1b1208' }}
+                    style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
                   >
                     {cartCount > 9 ? '9+' : cartCount}
                   </motion.span>
@@ -70,7 +70,7 @@ export default function BottomNav() {
 
               <span
                 className="font-mono text-[9px] uppercase tracking-wider"
-                style={{ color: isActive ? '#d4a354' : 'rgba(255,255,255,0.3)', transition: 'color 0.2s' }}
+                style={{ color: isActive ? 'var(--primary)' : 'rgba(var(--foreground-rgb), 0.35)', transition: 'color 0.2s' }}
               >
                 {label}
               </span>

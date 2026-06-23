@@ -42,3 +42,4 @@ firebase-service-account.json
 secrets.local.json
 /antigravity chats/
 /scratch/
+__pycache__/
