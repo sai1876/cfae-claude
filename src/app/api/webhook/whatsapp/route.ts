@@ -200,11 +200,52 @@ export async function POST(request: Request) {
         }
 
         // Trigger background processing for chat message
-        processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText)
+        processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData)
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
 
         return NextResponse.json({ success: true, message: 'Chat message queued' });
       }
+    }
+
+    // ----------------------------------------------------
+    // CASE 3: Location Message Payload (Sharing Live Location)
+    // ----------------------------------------------------
+    if (message.type === 'location' && message.location) {
+      const loc = message.location;
+      const lat = loc.latitude;
+      const lng = loc.longitude;
+      console.log(`[WHATSAPP WEBHOOK] Location received from ${fromPhone}: Lat ${lat}, Lng ${lng}`);
+
+      // --- Gate A: Phone Authentication Lookup ---
+      const usersRef = adminDb.collection('users');
+      const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
+
+      if (!userDoc) {
+        console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${fromPhone} not registered.`);
+        await sendWhatsAppMessage(
+          phoneNumberId,
+          fromPhone,
+          "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! 🌟"
+        );
+        return NextResponse.json({ success: true, message: 'Unregistered user aborted' });
+      }
+
+      // Update user's live_location in Firestore
+      const userRef = userDoc.ref;
+      await userRef.update({
+        live_location: {
+          lat: lat,
+          lng: lng,
+          updated_at: Date.now()
+        }
+      });
+      console.log(`[WHATSAPP WEBHOOK] Updated live_location for user: ${userDoc.id}`);
+
+      // Trigger background processing for location-based response
+      processLocationMessageInBackground(phoneNumberId, fromPhone, normalizedFromPhone, lat, lng)
+        .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Location processing failed:', err));
+
+      return NextResponse.json({ success: true, message: 'Location message queued' });
     }
 
     return NextResponse.json({ success: true, message: 'Unhandled webhook event' });
@@ -426,30 +467,47 @@ async function processGeneralChatInBackground(
   phoneNumberId: string,
   fromPhone: string,
   normalizedFromPhone: string,
-  messageText: string
+  messageText: string,
+  userData?: admin.firestore.DocumentData
 ) {
   if (!adminDb) return;
   console.log(`[BACKGROUND TASK] Starting general chat pipeline for ${fromPhone}`);
 
   try {
-    // 1. Fetch Coordinates from first outlet in database (fallback to Hyderabad)
+    // 1. Fetch Coordinates from user's address if available, else fallback to outlet coordinates
     let lat = 17.3850;
     let lng = 78.4867;
-    try {
-      const outletsSnap = await adminDb.collection('outlets').limit(1).get();
-      if (!outletsSnap.empty) {
-        const outletData = outletsSnap.docs[0].data();
-        if (outletData.coordinates?.latitude) {
-          lat = outletData.coordinates.latitude;
-          lng = outletData.coordinates.longitude;
-        } else if (outletData.coordinates?.lat) {
-          lat = outletData.coordinates.lat;
-          lng = outletData.coordinates.lng;
+    let locationSource = 'default (Hyderabad)';
+
+    const userAddress = userData?.addresses?.[0];
+    if (userAddress?.coordinates?.lat && userAddress?.coordinates?.lng) {
+      lat = Number(userAddress.coordinates.lat);
+      lng = Number(userAddress.coordinates.lng);
+      locationSource = `user saved address (${userAddress.label || 'Home'})`;
+    } else if (userAddress?.coordinates?.latitude && userAddress?.coordinates?.longitude) {
+      lat = Number(userAddress.coordinates.latitude);
+      lng = Number(userAddress.coordinates.longitude);
+      locationSource = `user saved address (${userAddress.label || 'Home'})`;
+    } else {
+      try {
+        const outletsSnap = await adminDb.collection('outlets').limit(1).get();
+        if (!outletsSnap.empty) {
+          const outletData = outletsSnap.docs[0].data();
+          if (outletData.coordinates?.latitude) {
+            lat = Number(outletData.coordinates.latitude);
+            lng = Number(outletData.coordinates.longitude);
+            locationSource = `outlet (${outletData.name})`;
+          } else if (outletData.coordinates?.lat) {
+            lat = Number(outletData.coordinates.lat);
+            lng = Number(outletData.coordinates.lng);
+            locationSource = `outlet (${outletData.name})`;
+          }
         }
+      } catch (err) {
+        console.warn('[BACKGROUND CHAT] Failed to fetch outlet coordinates, defaulting:', err);
       }
-    } catch (err) {
-      console.warn('[BACKGROUND CHAT] Failed to fetch outlet coordinates, defaulting:', err);
     }
+    console.log(`[BACKGROUND CHAT] Fetching weather for location: ${lat}, ${lng} (Source: ${locationSource})`);
 
     // 2. Fetch current weather from Open-Meteo API
     let weatherLine = 'Weather unknown.';
@@ -580,6 +638,137 @@ async function processGeneralChatInBackground(
       phoneNumberId,
       fromPhone,
       "Kya scene hai machha! Kuch technical issue chal raha backend mein, but overall lite le lo! Bol kya chahiye? 🚀"
+    );
+  }
+}
+
+/**
+ * Background Asynchronous Pipeline: handles location updates, fetches weather, queries Groq, and replies.
+ */
+async function processLocationMessageInBackground(
+  phoneNumberId: string,
+  fromPhone: string,
+  normalizedFromPhone: string,
+  lat: number,
+  lng: number
+) {
+  if (!adminDb) return;
+  console.log(`[BACKGROUND TASK] Starting location message pipeline for ${fromPhone} (Lat: ${lat}, Lng: ${lng})`);
+
+  try {
+    // 1. Fetch current weather from Open-Meteo API
+    let weatherLine = 'Weather unknown.';
+    try {
+      const wRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,apparent_temperature&timezone=auto`
+      );
+      if (wRes.ok) {
+        const wData = await wRes.json();
+        const temp = Math.round(wData.current.temperature_2m);
+        const feels = Math.round(wData.current.apparent_temperature);
+        const code = wData.current.weathercode;
+        let condition = 'clear';
+        if (code === 0) condition = 'sunny and clear';
+        else if (code <= 3) condition = 'partly cloudy';
+        else if (code <= 48) condition = 'foggy';
+        else if (code <= 67) condition = 'rainy';
+        else if (code <= 77) condition = 'snowy';
+        else if (code <= 99) condition = 'thunderstormy';
+        weatherLine = `It's ${temp}°C outside (feels like ${feels}°C) and ${condition}.`;
+      }
+    } catch (err) {
+      console.warn('[BACKGROUND LOCATION] Failed to fetch weather:', err);
+    }
+
+    // 2. Fetch active menu catalog
+    const menuSnap = await adminDb.collection('menu').where('is_available', '==', true).get();
+    const menuItems = menuSnap.docs.map(doc => doc.data());
+
+    // 3. Construct prompt
+    const prompt = 
+      `You are "Bhai" — a final-year student at this college who works part-time at Oasis Cafe, Hyderabad. ` +
+      `Talk like a funny, caring Hyderabadi college senior — mix of Hindi, Telugu slang, and English. ` +
+      `Phrases: "arre yaar", "bhai sun", "sach mein?", "mast plan hai", "pakka set", "lite le lo", "kya scene hai", "machha". ` +
+      `User shared their current live location, and the local weather is: ${weatherLine}\n` +
+      `Available Menu Items: ${menuItems.map(m => `${m.name} (Price: ₹${m.price}, ID: ${m.item_id})`).join(', ')}\n\n` +
+      `RULES:\n` +
+      `- Greet the user by acknowledging their live location and current weather in a fun senior style (e.g. "Kya scene hai machha, bol! Pata chala wahan bahut garmi hai..." or "Acha, toh tum wahan ho! Mast weather hai wahan...").\n` +
+      `- Suggest 1 to 3 items from the Available Menu Items list that match the weather.\n` +
+      `- Keep your response extremely brief (max 2-3 sentences total).\n\n` +
+      `Return ONLY a raw valid JSON object (no markdown block formatting like \`\`\`json):` +
+      `{"message": "your chat response text here", "suggested_items": ["item_id_1", "item_id_2"]}`;
+
+    // 4. Query LLM via Groq
+    const keysStr = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
+    const keys = keysStr.split(',').map(k => k.trim()).filter(Boolean);
+    let responseText = '';
+    
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [
+              { role: 'system', content: prompt },
+              { role: 'user', content: "Here is my location" }
+            ],
+            temperature: 0.7,
+            max_tokens: 300,
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (res.status === 429) continue;
+        if (!res.ok) throw new Error(`Groq API error status: ${res.status}`);
+
+        const data = await res.json();
+        responseText = data.choices[0].message.content;
+        break;
+      } catch (err) {
+        console.error(`[BACKGROUND LOCATION ERROR] Key index ${i} failed:`, err);
+      }
+    }
+
+    if (!responseText) throw new Error("All Groq API keys failed.");
+
+    // 5. Parse response and build reply
+    const parsed = JSON.parse(responseText);
+    let reply = parsed.message || "Bol machha! Kya scene hai wahan?";
+
+    // 6. Append suggestions
+    if (parsed.suggested_items && parsed.suggested_items.length > 0) {
+      let suggestions = '\n\nBhai suggests ordering these comfort items, machha:\n';
+      let count = 0;
+      for (const itemId of parsed.suggested_items) {
+        const item = menuItems.find(m => m.item_id === itemId);
+        if (item) {
+          suggestions += `• ${item.name} (₹${item.price})\n`;
+          count++;
+        }
+      }
+      if (count > 0) reply += suggestions;
+    }
+
+    // 7. Send message via WhatsApp
+    const success = await sendWhatsAppMessage(phoneNumberId, fromPhone, reply);
+    if (success) {
+      console.log(`[BACKGROUND LOCATION SUCCESS] Reply sent to ${fromPhone}`);
+    } else {
+      console.error(`[BACKGROUND LOCATION ERROR] Failed to send reply to ${fromPhone}`);
+    }
+
+  } catch (error) {
+    console.error('[BACKGROUND LOCATION EXCEPTION] Failed to process location:', error);
+    await sendWhatsAppMessage(
+      phoneNumberId,
+      fromPhone,
+      "Kya scene hai machha! Received your location, but ran into some issue loading the weather. Lite le lo! 🚀"
     );
   }
 }
