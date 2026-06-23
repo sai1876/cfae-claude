@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdminOrOwner() {
+      return isAuthenticated() && (request.auth.token.role == 'admin' || request.auth.token.role == 'owner');
+    }
+
+    function isStaffOrAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'staff' || 
+        request.auth.token.role == 'admin' || 
+        request.auth.token.role == 'owner' || 
+        request.auth.token.role == 'manager'
+      );
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdminOrOwner());
+    }
+
+    // --- Orders Collection ---
+    match /orders/{orderId} {
+      allow read, update: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isStaffOrAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.user_id == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // --- Public/Read-Only Catalog & Config Collections ---
+    match /menu/{document=**} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+
+    match /slider_items/{document=**} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+    
+    match /config/{document} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+    
+    match /calendar_events/{document=**} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+    
+    match /offers/{document=**} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+
+    // --- Staff & Internal Collections ---
+    match /stocks/{document=**} {
+      allow read, write: if isStaffOrAdmin();
+    }
+
+    match /staff/{document=**} {
+      allow read, write: if isStaffOrAdmin();
+    }
+    
+    match /admin_secrets/{document=**} {
+      allow read, write: if false; // Only Admin SDK on server-side can access
+    }
+    
+    match /outlets/{document=**} {
+      allow read: if true;
+      allow write: if isAdminOrOwner();
+    }
+
+    match /approvals/{document=**} {
+      allow read, write: if isAdminOrOwner();
+    }
+
+    match /scan_sessions/{document=**} {
+      allow read, write: if isStaffOrAdmin();
+    }
+
+    // --- Loyalty Ledger & Safety Registers ---
+    match /point_ledger/{document=**} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isStaffOrAdmin());
+      allow create, update: if isAuthenticated() && (request.resource.data.user_id == request.auth.uid || isAdminOrOwner());
+      allow delete: if isAdminOrOwner();
+    }
+
+    match /device_registry/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /vouchers/{document=**} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isStaffOrAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.user_id == request.auth.uid || isAdminOrOwner());
+      allow delete: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdminOrOwner());
+    }
+  }
+}

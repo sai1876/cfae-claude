@@ -1,0 +1,1127 @@
+/* ==========================================
+   DYNAMIC HERO & SHOWCASE - WORLD-CLASS DESIGNER REDESIGN
+   ========================================== */
+
+.showcase-outer-shell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #060403; /* Premium Matte Espresso Black */
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(212, 168, 50, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(232, 98, 26, 0.05) 0%, transparent 50%);
+  padding: 40px 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 📱 MOCKUP PHONE FRAME (Desktop Presentation, Responsive Native Mobile) */
+.showcase-phone-frame {
+  width: 410px;
+  min-height: 840px;
+  height: auto;
+  background: transparent; /* Changed to transparent to show vibrant hero image */
+  border: 12px solid #1a120d; /* Deep roasted coffee bezel/frame outline */
+  border-radius: 48px;
+  box-shadow: 
+    0 50px 100px rgba(0, 0, 0, 0.9), 
+    0 15px 30px rgba(0, 0, 0, 0.75),
+    inset 0 2px 8px rgba(255, 255, 255, 0.04);
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Screen Bezel Gloss Glare */
+.phone-screen-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(255, 255, 255, 0.04) 48%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 52%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 50;
+  transform: translateX(-50%);
+}
+
+/* Phone Bezel Notch */
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 28px;
+  background: #1a120d; /* Sleek bezel notch */
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  z-index: 99;
+  box-shadow: inset 0 -2px 5px rgba(0,0,0,0.15);
+  display: block;
+}
+
+/* Bottom iOS indicator bar */
+.phone-home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4.5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  z-index: 99;
+  pointer-events: none;
+  display: block;
+}
+
+/* Viewport content core sizing */
+.showcase-viewport-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent; /* Changed to transparent to match exact UI background */
+  position: relative;
+  z-index: 10;
+  padding-top: 12px; /* Safety spacing for notch */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Hide scrollbar for cleaner look */
+}
+.showcase-viewport-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* ──────────────────────────────────────────
+   1. TOP NAVIGATION STYLE (Matches Image 2)
+   ────────────────────────────────────────── */
+
+.showcase-top-nav {
+  background: transparent;
+  padding: 18px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  z-index: 20;
+}
+
+.showcase-brand-logo {
+  font-family: 'Fable Noir', serif;
+  font-weight: normal;
+  font-size: 1.55rem;
+  letter-spacing: -0.03em;
+  color: #D4A832; /* Rich gold logo */
+  text-shadow: 0 2px 10px rgba(212, 168, 50, 0.18);
+  white-space: nowrap;
+}
+
+.showcase-location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.location-pulse {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #E8621A;
+  animation: heartBeat 2s ease-in-out infinite;
+}
+
+/* Yellow-gold login button */
+.showcase-login-btn {
+  background-color: #F8BC51;
+  color: #0f0d0b;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  padding: 8px 18px;
+  border-radius: 99px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(248, 188, 81, 0.25);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.showcase-login-btn:hover {
+  background-color: #ffce7b;
+  transform: scale(1.04);
+  box-shadow: 0 6px 18px rgba(248, 188, 81, 0.4);
+}
+
+/* User Account active badge */
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 4px 8px 4px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  color: #fff;
+}
+
+.profile-name-full {
+  display: inline;
+}
+.profile-name-initials {
+  display: none;
+}
+
+@media (max-width: 460px) {
+  .profile-name-full {
+    display: none;
+  }
+  .profile-name-initials {
+    display: inline;
+  }
+}
+
+.points-pill {
+  background: #D4A832;
+  color: #121212;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+/* ──────────────────────────────────────────
+   2. FLOATING TELEMETRY DOCK (High-Tech Capsule)
+   ────────────────────────────────────────── */
+
+.showcase-telemetry-dock-wrapper {
+  width: 100%;
+  padding: 10px 16px 4px;
+  display: flex;
+  justify-content: center;
+  z-index: 15;
+  box-sizing: border-box;
+}
+
+.showcase-telemetry-dock {
+  background: rgba(13, 46, 39, 0.55); /* Translucent forest green */
+  border: 1px solid rgba(182, 232, 211, 0.15);
+  padding: 8px 16px;
+  border-radius: 99px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Traveling border beam laser indicator */
+.showcase-telemetry-dock .border-beam {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 1px;
+  animation: beamMove 4s linear infinite;
+}
+
+@keyframes beamMove {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.status-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulseLight 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseLight {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.35); opacity: 1; }
+}
+
+.status-banner-text {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #b6e8d3;
+}
+
+/* Circular speedometer elements */
+.queue-speedometer-wrapper {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speedometer-ring {
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1.8;
+}
+
+.ring-progress {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.speedometer-label {
+  position: absolute;
+  font-size: 8px;
+  color: #b6e8d3;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* ──────────────────────────────────────────
+   3. PREMIUM CARD SHOWCASE & DRIFTING AURORAS
+   ────────────────────────────────────────── */
+
+.showcase-card-container {
+  flex: 0 0 auto;
+  min-height: 450px;
+  margin: 10px 16px 16px;
+  border-radius: 48px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 24px 50px rgba(0,0,0,0.55), 
+    inset 0 1px 0 rgba(255,255,255,0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 14px;
+  box-sizing: border-box;
+  transition: background 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Drifting organic background blurs */
+.mesh-aurora-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.35;
+}
+
+.mesh-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  mix-blend-mode: screen;
+}
+
+.blob-1 {
+  width: 220px;
+  height: 220px;
+  top: -30px;
+  left: -20px;
+  animation: driftBlob1 15s ease-in-out infinite alternate;
+}
+
+.blob-2 {
+  width: 180px;
+  height: 180px;
+  bottom: -40px;
+  right: -20px;
+  animation: driftBlob2 18s ease-in-out infinite alternate;
+}
+
+.blob-3 {
+  width: 140px;
+  height: 140px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: driftBlob3 12s ease-in-out infinite alternate;
+}
+
+@keyframes driftBlob1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(40px, 30px) scale(1.15) rotate(90deg); }
+}
+
+@keyframes driftBlob2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(-30px, -40px) scale(1.2) rotate(-90deg); }
+}
+
+@keyframes driftBlob3 {
+  0% { transform: translate(-50%, -50%) scale(0.9); }
+  100% { transform: translate(-30%, -30%) scale(1.1); }
+}
+
+/* Cinematic Shimmer Reflection Bar */
+.card-shimmer-sweep {
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 52%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(-15deg);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Switch items trigger shimmer diagonal sweep */
+.switching-item .card-shimmer-sweep {
+  animation: shimmerSweep 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes shimmerSweep {
+  0% { top: -100%; left: -100%; }
+  100% { top: 30%; left: 30%; }
+}
+
+.card-atmospheric-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.card-radial-shade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 110%, rgba(0, 0, 0, 0.55) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.showcase-card-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Category Badge Capsule */
+.showcase-category-tag {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #D4A832; /* Gold letters */
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  padding: 6px 14px;
+  border-radius: 99px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+}
+
+/* Item Name Headline with Metallic gradient */
+.showcase-item-title {
+  text-align: center;
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metallic-title-text {
+  background: linear-gradient(135deg, #ffffff 30%, #e2d1c3 70%, #d4a832 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.showcase-item-title .line-first {
+  display: block;
+}
+
+.showcase-item-title .line-second {
+  display: block;
+}
+
+/* ──────────────────────────────────────────
+   4. LUXURY OBSIDIAN PLATTER & halo
+   ────────────────────────────────────────── */
+
+.showcase-platter-area {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 20px;
+}
+
+/* Corona Pulsing Light Ring behind Platter */
+.platter-corona-glow {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  animation: coronaBreath 3.5s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes coronaBreath {
+  0%, 100% { transform: scale(0.96); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+.platter-aurora {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  filter: blur(12px);
+  animation: breatheGlow 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes breatheGlow {
+  0%, 100% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+/* Premium Glassmorphic Base Plate */
+.platter-circle-base {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.35),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+  z-index: 3;
+}
+
+.platter-inner-rim {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(212, 168, 50, 0.15);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0) 100%); /* Translucent inner */
+}
+
+/* Metallic gold-leaf rim inlay */
+.platter-circle-base::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 168, 50, 0.18);
+  pointer-events: none;
+}
+
+.showcase-food-display {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.food-photo-rendered {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.7));
+  z-index: 6;
+}
+
+.food-emoji-fallback {
+  font-size: 80px;
+  z-index: 4;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.45));
+}
+
+/* ──────────────────────────────────────────
+   5. FLOATING INGREDIENT MICRO-BADGES
+   ────────────────────────────────────────── */
+
+.floating-ingredients-container {
+  position: absolute;
+  inset: -15px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.floating-ingredient-pill {
+  background: rgba(0, 0, 0, 0.45); /* Cleaner, simpler frosted glass */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem; /* Increased size for readability */
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  pointer-events: auto;
+  white-space: nowrap;
+  animation: itemFloat 4s ease-in-out infinite alternate;
+}
+
+.floating-ingredient-pill:nth-child(2) {
+  animation-delay: 0.5s;
+  animation-duration: 4.5s;
+}
+
+.floating-ingredient-pill:nth-child(3) {
+  animation-delay: 1s;
+  animation-duration: 3.8s;
+}
+
+@keyframes itemFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-5px) rotate(1deg); }
+}
+
+.star-sparkle {
+  font-size: 10px;
+  animation: pulseLight 1.5s infinite ease-in-out;
+}
+
+/* Description Text */
+.showcase-item-desc {
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 290px;
+  margin: 0 auto 24px; /* Minimum required space before action row */
+  /* height: 90px; Removed to dynamically fit text */
+  display: -webkit-box;
+  -webkit-line-clamp: 6; /* Support up to 6 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* ──────────────────────────────────────────
+   6. ACTION ROW (Price & Add to Cart)
+   ────────────────────────────────────────── */
+
+.showcase-action-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.showcase-price-tag {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #F8BC51; /* Dynamic gold/orange price */
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 15px rgba(248, 188, 81, 0.2);
+}
+
+.showcase-add-cart-btn {
+  background-color: #E2E8F0; /* Clean grey capsule button (Image 2) */
+  color: #1a1715;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  padding: 12px 28px;
+  border-radius: 99px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Specular Shimmer Sweep on button hover */
+.showcase-add-cart-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 20%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+}
+
+.showcase-add-cart-btn:hover::after {
+  left: 120%;
+}
+
+.showcase-add-cart-btn:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255,255,255,0.22);
+}
+
+.showcase-add-cart-btn:active {
+  transform: translateY(0);
+}
+
+/* ──────────────────────────────────────────
+   7. GEMSTONE CATEGORY WHEEL & THUMBNAILS
+   ────────────────────────────────────────── */
+
+.showcase-thumbnails-bar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.thumbnails-scroll-container {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar on Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar on IE/Edge */
+  padding: 12px 16px; /* Add padding so active glow is not cut off at edges */
+  box-sizing: border-box;
+}
+
+.thumbnails-scroll-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar on Chrome, Safari, Opera */
+}
+
+@media (min-width: 340px) {
+  .thumbnails-scroll-container {
+    justify-content: center;
+  }
+}
+
+.thumb-circle-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.thumb-circle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  border-color: rgba(248, 188, 81, 0.3);
+}
+
+.thumb-circle-btn.selected {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-4px) scale(1.05);
+}
+
+/* Active Thumbnail Gold Glowing Pulsar Ring */
+.thumb-active-glowing-ring {
+  position: absolute;
+  inset: -3.5px;
+  border-radius: 50%;
+  border: 2px solid #D4A832;
+  box-shadow: 
+    0 0 12px rgba(212, 168, 50, 0.6),
+    inset 0 0 4px rgba(212, 168, 50, 0.4);
+  pointer-events: none;
+}
+
+.thumb-emoji {
+  font-size: 20px;
+  user-select: none;
+}
+
+/* Thumbnail scroll dots */
+.thumb-indicator-track {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.thumb-dot-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.thumb-dot-indicator.active {
+  width: 14px;
+  border-radius: 99px;
+  background: #D4A832;
+}
+
+/* ──────────────────────────────────────────
+   8. HINTS & UTILS
+   ────────────────────────────────────────── */
+
+.showcase-swipe-hint {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.showcase-swipe-hint span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.3);
+  animation: bounceHint 2s infinite ease-in-out;
+}
+
+@keyframes bounceHint {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(3px); opacity: 0.6; }
+}
+
+/* Butter transitions */
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.2s ease-in;
+}
+
+/* ── RESPONSIVE COMPATIBILITY ── */
+@media (max-width: 768px) {
+  .showcase-outer-shell {
+    padding: 0;
+    background: #0f0d0b;
+    height: auto;
+    min-height: 100vh;
+  }
+  .showcase-phone-frame {
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .phone-notch, .phone-home-indicator, .phone-screen-glare {
+    display: none; /* Hide device simulator lines on true mobile screens */
+  }
+  .showcase-viewport-content {
+    padding-top: 0; /* Clear notch offset for true full-screens */
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
+
+/* ==========================================
+   THEME VIEWPORT GRADIENTS (Swiggy/Blinkit Campaign Overrides)
+   ========================================== */
+
+.showcase-phone-frame.theme-default .showcase-viewport-content {
+  background: #0A0604;
+}
+
+.showcase-phone-frame.theme-raining .showcase-viewport-content {
+  background: radial-gradient(circle at center, #1b2f2b 0%, #060e0c 100%) !important;
+}
+
+.showcase-phone-frame.theme-exam .showcase-viewport-content {
+  background: radial-gradient(circle at center, #1e1d33 0%, #080712 100%) !important;
+}
+
+.showcase-phone-frame.theme-fest .showcase-viewport-content {
+  background: radial-gradient(circle at center, #4d3615 0%, #170f03 100%) !important;
+}
+
+.showcase-phone-frame.theme-night .showcase-viewport-content {
+  background: radial-gradient(circle at center, #23122c 0%, #09030c 100%) !important;
+}
+
+.showcase-phone-frame.theme-valentines .showcase-viewport-content {
+  background: radial-gradient(circle at center, #570f24 0%, #1f030a 100%) !important;
+}
+
+.showcase-phone-frame.theme-scorching .showcase-viewport-content {
+  background: radial-gradient(circle at center, #6e350f 0%, #210e03 100%) !important;
+}
+
+/* ==========================================
+   CAMPAIGN GRID BOARD STYLES (Blinkit Style)
+   ========================================== */
+
+.grid-board-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: 12px;
+}
+
+.grid-board-scrollable::-webkit-scrollbar {
+  display: none;
+}
+
+.grid-board-header {
+  padding: 20px 16px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.grid-board-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grid-board-headline {
+  font-family: 'Syne', 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+  margin: 0;
+}
+
+.grid-board-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.grid-board-toggle-badge {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #f8bc51;
+  color: #f8bc51;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 99px;
+  box-shadow: 0 0 10px rgba(248, 188, 81, 0.25);
+  text-transform: uppercase;
+}
+
+.grid-board-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 8px 16px 16px;
+  box-sizing: border-box;
+}
+
+.grid-card-tile {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 0.88;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+.grid-card-tile:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(248, 188, 81, 0.25);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+.grid-card-image-wrap {
+  width: 100%;
+  height: 60%;
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.grid-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.grid-card-tile:hover .grid-card-img {
+  transform: scale(1.08);
+}
+
+.grid-card-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 40%;
+  box-sizing: border-box;
+  gap: 2px;
+}
+
+.grid-card-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.grid-card-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid-card-price-badge {
+  background: rgba(248, 188, 81, 0.12);
+  border: 1px solid rgba(248, 188, 81, 0.25);
+  color: #f8bc51;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.55rem;
+  padding: 1px 6px;
+  border-radius: 99px;
+  width: fit-content;
+  margin-top: 3px;
+}
+
+.grid-ribbon-ticker {
+  background: linear-gradient(90deg, rgba(87, 15, 36, 0.9) 0%, rgba(162, 16, 63, 0.9) 50%, rgba(87, 15, 36, 0.9) 100%);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+/* Gold ribbon for festive/Diwali */
+.theme-fest .grid-ribbon-ticker {
+  background: linear-gradient(90deg, rgba(77, 54, 21, 0.9) 0%, rgba(162, 114, 43, 0.9) 50%, rgba(77, 54, 21, 0.9) 100%) !important;
+  border-top-color: rgba(248, 188, 81, 0.15);
+  border-bottom-color: rgba(248, 188, 81, 0.15);
+}
+
+.grid-ribbon-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.3;
+}
+
+
