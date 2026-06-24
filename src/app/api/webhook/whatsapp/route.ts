@@ -154,14 +154,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Inactive user aborted' });
       }
 
-      // --- ASYNCHRONOUS PIPELINE TRIGGER (SUB-100MS WEBHOOK ACK) ---
-      // We start the background processing task and return 200 OK immediately.
-      // This prevents WhatsApp from timing out and sending duplicate webhook retries.
-      processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId)
+      // Process voice order
+      await processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId)
         .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Background processing failed:', err));
 
-      console.log(`[WHATSAPP WEBHOOK] Voice order accepted. Delegating to background thread.`);
-      return NextResponse.json({ success: true, message: 'Voice order queued' });
+      console.log(`[WHATSAPP WEBHOOK] Voice order processed.`);
+      return NextResponse.json({ success: true, message: 'Voice order processed' });
     }
 
     // ----------------------------------------------------
@@ -174,11 +172,11 @@ export async function POST(request: Request) {
       if (tokenMatch) {
         const token = tokenMatch[1].toUpperCase();
         
-        // Immediate background processing for text handshake as well
-        processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token)
+        // Process text handshake
+        await processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token)
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Handshake processing failed:', err));
 
-        return NextResponse.json({ success: true, message: 'Handshake queued' });
+        return NextResponse.json({ success: true, message: 'Handshake completed' });
       } else {
         // --- Gate A: Phone Authentication Lookup for general chat ---
         const usersRef = adminDb.collection('users');
@@ -206,11 +204,11 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: true, message: 'Inactive user aborted' });
         }
 
-        // Trigger background processing for chat message
-        processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData)
+        // Process chat message
+        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData)
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
 
-        return NextResponse.json({ success: true, message: 'Chat message queued' });
+        return NextResponse.json({ success: true, message: 'Chat message processed' });
       }
     }
 
@@ -248,11 +246,11 @@ export async function POST(request: Request) {
       });
       console.log(`[WHATSAPP WEBHOOK] Updated live_location for user: ${userDoc.id}`);
 
-      // Trigger background processing for location-based response
-      processLocationMessageInBackground(phoneNumberId, fromPhone, normalizedFromPhone, lat, lng)
+      // Process location
+      await processLocationMessageInBackground(phoneNumberId, fromPhone, normalizedFromPhone, lat, lng, userData)
         .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Location processing failed:', err));
 
-      return NextResponse.json({ success: true, message: 'Location message queued' });
+      return NextResponse.json({ success: true, message: 'Location processed' });
     }
 
     return NextResponse.json({ success: true, message: 'Unhandled webhook event' });
