@@ -93,6 +93,9 @@ export async function POST(request: Request) {
     const payload = await request.json();
     console.log('[WHATSAPP WEBHOOK] Webhook payload received:', JSON.stringify(payload));
 
+    const host = request.headers.get('host') || 'hauhaucafe.vercel.app';
+    const baseUrl = `https://${host}`;
+
     const entry = payload.entry?.[0];
     const change = entry?.changes?.[0];
     const value = change?.value;
@@ -155,7 +158,7 @@ export async function POST(request: Request) {
       }
 
       // Process voice order
-      await processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId)
+      await processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId, baseUrl)
         .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Background processing failed:', err));
 
       console.log(`[WHATSAPP WEBHOOK] Voice order processed.`);
@@ -205,7 +208,7 @@ export async function POST(request: Request) {
         }
 
         // Process chat message
-        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData, userDoc.id)
+        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData, userDoc.id, baseUrl)
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
 
         return NextResponse.json({ success: true, message: 'Chat message processed' });
@@ -268,7 +271,8 @@ async function processVoiceOrderInBackground(
   phoneNumberId: string,
   fromPhone: string,
   normalizedFromPhone: string,
-  mediaId: string
+  mediaId: string,
+  baseUrl: string
 ) {
   if (!adminDb) return;
   console.log(`[BACKGROUND TASK] Starting pipeline for ${fromPhone}, Media: ${mediaId}`);
@@ -318,7 +322,7 @@ async function processVoiceOrderInBackground(
     const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
     const userData = userDoc ? userDoc.data() : undefined;
 
-    await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, transcription, userData, userDoc ? userDoc.id : undefined);
+    await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, transcription, userData, userDoc ? userDoc.id : undefined, baseUrl);
 
   } catch (error) {
     console.error('[BACKGROUND TASK EXCEPTION] Failed to process voice note:', error);
@@ -407,7 +411,8 @@ async function processGeneralChatInBackground(
   normalizedFromPhone: string,
   messageText: string,
   userData?: admin.firestore.DocumentData,
-  userId?: string
+  userId?: string,
+  baseUrl: string = 'https://hauhaucafe.vercel.app'
 ) {
   if (!adminDb) return;
   console.log(`[BACKGROUND TASK] Starting general chat pipeline for ${fromPhone}`);
@@ -524,7 +529,7 @@ async function processGeneralChatInBackground(
           expires_at: expiresAt
         });
 
-        const checkoutLink = `https://hauhau.menu/cart?session=${voiceOrderId}&magic=true`;
+        const checkoutLink = `${baseUrl}/cart?session=${voiceOrderId}&magic=true`;
         
         orderContextText = `\n\nCRITICAL ORDER CONTEXT: The user just ordered the following items: ${summaryRows.slice(0, -2)}. ` +
                            `Their order has been automatically staged and added to their cart! ` +
