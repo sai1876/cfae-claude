@@ -311,84 +311,17 @@ async function processVoiceOrderInBackground(
       return;
     }
 
-    // 3. Fetch active menu catalog
-    const menuSnap = await adminDb.collection('menu').where('is_available', '==', true).get();
-    const menuItems: MenuItem[] = menuSnap.docs.map(doc => doc.data() as MenuItem);
+    // 3. Forward the transcribed text to the unified general chat pipeline!
+    console.log(`[BACKGROUND TASK] Transcribed voice to text: "${transcription}". Forwarding to chat pipeline.`);
+    
+    const usersRef = adminDb.collection('users');
+    const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
+    const userData = userDoc ? userDoc.data() : undefined;
 
-    // 4. Match items via Gemini AI (with automated rotating key fallback)
-    const matches = await matchVoiceOrderToMenu(transcription, menuItems);
-    if (matches.length === 0) {
-      await sendWhatsAppMessage(
-        phoneNumberId,
-        fromPhone,
-        "Sorry, boss! I couldn't match any items in your voice note with our menu. Could you try speaking a bit clearer, or specify the item names? 🍗"
-      );
-      return;
-    }
-
-    // 5. Calculate totals and compile structural rows
-    const matchedItemsWithDetails = [];
-    let estimatedTotal = 0;
-    let summaryRows = '';
-
-    for (const match of matches) {
-      const menuItem = menuItems.find(m => m.item_id === match.id);
-      if (menuItem) {
-        const unitPrice = menuItem.price;
-        const itemTotal = unitPrice * match.qty;
-        estimatedTotal += itemTotal;
-
-        matchedItemsWithDetails.push({
-          name: menuItem.name,
-          qty: match.qty,
-          unit_price: unitPrice
-        });
-
-        summaryRows += `• ${match.qty}x ${menuItem.name}: ₹${itemTotal}\n`;
-      }
-    }
-
-    if (matchedItemsWithDetails.length === 0) {
-      await sendWhatsAppMessage(
-        phoneNumberId,
-        fromPhone,
-        "Sorry, boss! I couldn't match any items in your voice note with our menu. Could you try speaking a bit clearer, or specify the item names? 🍗"
-      );
-      return;
-    }
-
-    // 6. Generate UUID and stage order in Firestore
-    const voiceOrderId = crypto.randomUUID();
-    const now = admin.firestore.Timestamp.now();
-    const expiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + 5 * 60 * 1000); // 5 min expiry
-
-    const voiceOrderDoc = {
-      id: voiceOrderId,
-      phone_number: normalizedFromPhone,
-      items: matchedItemsWithDetails,
-      estimated_total: estimatedTotal,
-      status: 'PENDING',
-      created_at: now,
-      expires_at: expiresAt,
-      soft_deleted_at: null
-    };
-
-    await adminDb.collection('voice_orders').doc(voiceOrderId).set(voiceOrderDoc);
-    console.log(`[BACKGROUND TASK SUCCESS] Voice order created: ${voiceOrderId}`);
-
-    // 7. Send checkout details and link
-    const checkoutLink = `https://hauhau.menu/checkout/voice?session=${voiceOrderId}`;
-    const confirmationText = `Got your voice order, Ustaad! 🔥\n\n${summaryRows}Estimated Total: ₹${estimatedTotal}\n\nClick this secure link to view your cart, enter your account password, and confirm payment within 5 minutes: ${checkoutLink}`;
-
-    const success = await sendWhatsAppMessage(phoneNumberId, fromPhone, confirmationText);
-    if (success) {
-      console.log(`[BACKGROUND TASK SUCCESS] Confirmation sent to ${fromPhone}`);
-    } else {
-      console.error(`[BACKGROUND TASK ERROR] Failed to send confirmation to ${fromPhone}`);
-    }
+    await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, transcription, userData);
 
   } catch (error) {
-    console.error('[BACKGROUND TASK EXCEPTION] Failed to process voice order:', error);
+    console.error('[BACKGROUND TASK EXCEPTION] Failed to process voice note:', error);
     await sendWhatsAppMessage(
       phoneNumberId,
       fromPhone,
@@ -546,22 +479,69 @@ async function processGeneralChatInBackground(
 
     // 3. Fetch active menu catalog
     const menuSnap = await adminDb.collection('menu').where('is_available', '==', true).get();
-    const menuItems = menuSnap.docs.map(doc => doc.data());
+    const menuItems = menuSnap.docs.map(doc => doc.data() as MenuItem);
 
-    // 4. Construct prompt with Bhai personality
+    // 4. Attempt to extract menu items from the message text
+    const matches = await matchVoiceOrderToMenu(messageText, menuItems);
+    let orderContextText = '';
+    
+    if (matches.length > 0) {
+      const matchedItemsWithDetails = [];
+      let estimatedTotal = 0;
+      let summaryRows = '';
+
+      for (const match of matches) {
+        const menuItem = menuItems.find(m => m.item_id === match.id);
+        if (menuItem) {
+          const unitPrice = menuItem.price;
+          const itemTotal = unitPrice * match.qty;
+          estimatedTotal += itemTotal;
+
+          matchedItemsWithDetails.push({
+            name: menuItem.name,
+            qty: match.qty,
+            unit_price: unitPrice
+          });
+
+          summaryRows += `${match.qty}x ${menuItem.name} (₹${itemTotal}), `;
+        }
+      }
+
+      if (matchedItemsWithDetails.length > 0) {
+        // Stage the order in Firestore
+        const voiceOrderId = crypto.randomUUID();
+        await adminDb.collection('voice_orders').doc(voiceOrderId).set({
+          user_phone: normalizedFromPhone,
+          items: matchedItemsWithDetails,
+          estimated_total: estimatedTotal,
+          status: 'staged',
+          created_at: Date.now()
+        });
+
+        const checkoutLink = `https://hauhau.menu/checkout/voice?session=${voiceOrderId}`;
+        
+        orderContextText = `\n\nCRITICAL ORDER CONTEXT: The user just ordered the following items: ${summaryRows.slice(0, -2)}. ` +
+                           `Their order has been automatically staged and added to their cart! ` +
+                           `You MUST explicitly tell them that their order is ready and give them this exact checkout link: ${checkoutLink} ` +
+                           `Then, suggest 1 or 2 complementary items they might want to add to their order.`;
+      }
+    }
+
+    // 5. Construct prompt with Bhai personality
     const prompt = 
       `You are "Bhai" — a final-year student at this college who works part-time at Oasis Cafe, Hyderabad. ` +
       `Talk like a funny, caring Hyderabadi college senior — mix of Hindi, Telugu slang, and English. ` +
       `Phrases: "arre yaar", "bhai sun", "sach mein?", "mast plan hai", "pakka set", "lite le lo", "kya scene hai", "machha". ` +
       `Current Local Weather Context: ${weatherLine}\n` +
-      `Available Menu Items: ${menuItems.map(m => `${m.name} (Price: ₹${m.price}, ID: ${m.item_id})`).join(', ')}\n\n` +
+      `Available Menu Items: ${menuItems.map(m => `${m.name} (Price: ₹${m.price}, ID: ${m.item_id})`).join(', ')}\n` +
+      orderContextText + `\n\n` +
       `RULES:\n` +
-      `- ALWAYS greet the user starting with "Hi machha! How can I help you?" or "Kya scene hai machha, bol!" followed by a friendly chat.\n` +
-      `- Make sure your mood matches the current weather (e.g. dramatic complaints if hot/sunny, super cozy/happy if rainy/cold, using Hyderabadi slang).\n` +
-      `- Suggest 1 to 3 items from the Available Menu Items list that match the weather (e.g., recommend hot tea/coffee, waffles/brownies if cold/rainy; recommend cold coolers, milkshakes if sunny/hot).\n` +
-      `- Keep your response extremely brief (max 2-3 sentences total).\n\n` +
+      `- ALWAYS greet the user in a friendly way.\n` +
+      `- If there is an order, MUST INCLUDE the checkout link in your reply.\n` +
+      `- Suggest 1 to 3 complementary items from the menu based on the weather.\n` +
+      `- Keep your response brief (max 2-3 sentences total).\n\n` +
       `Return ONLY a raw valid JSON object (no markdown block formatting like \`\`\`json):` +
-      `{"message": "your chat response text here", "suggested_items": ["item_id_1", "item_id_2"]}`;
+      `{"message": "your chat response text including links", "suggested_items": ["item_id_1", "item_id_2"]}`;
 
     // 5. Query LLM via Groq with rotating key fallback
     const keysStr = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
