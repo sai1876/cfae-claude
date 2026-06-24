@@ -533,8 +533,7 @@ async function processGeneralChatInBackground(
         
         orderContextText = `\n\nCRITICAL ORDER CONTEXT: The user just ordered the following items: ${summaryRows.slice(0, -2)}. ` +
                            `Their order has been automatically staged and added to their cart! ` +
-                           `You MUST explicitly tell them that their order is ready and give them this exact checkout link: ${checkoutLink} ` +
-                           `Then, suggest 1 or 2 complementary items they might want to add to their order.`;
+                           `You MUST explicitly tell them that their order is ready and give them this exact checkout link: ${checkoutLink} `;
       }
     }
 
@@ -549,7 +548,8 @@ async function processGeneralChatInBackground(
       `RULES:\n` +
       `- ALWAYS greet the user in a friendly way.\n` +
       `- If there is an order, MUST INCLUDE the checkout link in your reply.\n` +
-      `- Suggest 1 to 3 complementary items from the menu based on the weather.\n` +
+      `- Choose 1 to 3 complementary items from the menu based on the weather and put their IDs in the \`suggested_items\` array.\n` +
+      `- CRITICAL: DO NOT mention or ask about these suggested items in your conversational \`message\` string. The system will automatically append them for you.\n` +
       `- Keep your response brief (max 2-3 sentences total).\n\n` +
       `Return ONLY a raw valid JSON object (no markdown block formatting like \`\`\`json):` +
       `{"message": "your chat response text including links", "suggested_items": ["item_id_1", "item_id_2"]}`;
@@ -695,7 +695,8 @@ async function processLocationMessageInBackground(
       `Available Menu Items: ${menuItems.map(m => `${m.name} (Price: ₹${m.price}, ID: ${m.item_id})`).join(', ')}\n\n` +
       `RULES:\n` +
       `- Greet the user by acknowledging their live location and current weather in a fun senior style (e.g. "Kya scene hai machha, bol! Pata chala wahan bahut garmi hai..." or "Acha, toh tum wahan ho! Mast weather hai wahan...").\n` +
-      `- Suggest 1 to 3 items from the Available Menu Items list that match the weather.\n` +
+      `- Choose 1 to 3 items from the Available Menu Items list that match the weather and put their IDs in the \`suggested_items\` array.\n` +
+      `- CRITICAL: DO NOT mention or ask about these suggested items in your conversational \`message\` string. The system will automatically append them for you.\n` +
       `- Keep your response extremely brief (max 2-3 sentences total).\n\n` +
       `Return ONLY a raw valid JSON object (no markdown block formatting like \`\`\`json):` +
       `{"message": "your chat response text here", "suggested_items": ["item_id_1", "item_id_2"]}`;
