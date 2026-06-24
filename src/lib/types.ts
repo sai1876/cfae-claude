@@ -176,16 +176,26 @@ export interface UIConfig {
   hero_image?: string;
   auto_calendar_mode?: boolean;
   mock_date?: string;
-  layout_mode?: 'slider' | 'grid_board' | 'summer_sips';
+  layout_mode?: 'slider' | 'grid_board' | 'summer_sips' | 'premium_salad';
   grid_board_title?: string;
   grid_board_badge_text?: string;
   grid_board_ribbon_text?: string;
   grid_cards?: GridCard[];
   summer_campaign_settings?: SummerCampaignSettings;
+  premium_salad_settings?: PremiumSaladSettings;
   social_stats?: { value: string; label: string }[];
   social_stats_active?: boolean;
   auto_scroll_enabled?: boolean;
   auto_scroll_interval?: number;
+}
+
+export interface PremiumSaladSettings {
+  background_gradient?: string;
+  ingredients_sprite_url?: string;
+  item1_name?: string;
+  item2_name?: string;
+  item3_name?: string;
+  item4_name?: string;
 }
 
 export interface SummerCampaignSettings {

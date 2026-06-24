@@ -258,14 +258,22 @@ export default function UIAtmosphereManager() {
   const [slideSortOrder, setSlideSortOrder] = useState(1);
 
   // Image tab selector ('storefront' = general background, 'slide' = slide transparent png, 'grid_card' = grid board promotional banner)
-  const [imageTab, setImageTab] = useState<'storefront' | 'slide' | 'grid_card' | 'summer_drink' | 'summer_cat'>('storefront');
+  const [imageTab, setImageTab] = useState<'storefront' | 'slide' | 'grid_card' | 'summer_drink' | 'summer_cat' | 'salad_sprite'>('storefront');
 
   // Campaign Grid Layout Settings state
-  const [layoutMode, setLayoutMode] = useState<'slider' | 'grid_board' | 'summer_sips'>('slider');
+  const [layoutMode, setLayoutMode] = useState<'slider' | 'grid_board' | 'summer_sips' | 'premium_salad'>('slider');
   const [gridBoardTitle, setGridBoardTitle] = useState('Featured Specials');
   const [gridBoardBadgeText, setGridBoardBadgeText] = useState('');
   const [gridBoardRibbonText, setGridBoardRibbonText] = useState('');
   const [gridCards, setGridCards] = useState<GridCard[]>([]);
+
+  // Premium Salad Hero Settings state
+  const [saladBgGradient, setSaladBgGradient] = useState('radial-gradient(circle at 20% 10%, rgba(217, 230, 221, 0.55) 0%, rgba(25, 41, 30, 0.2) 50%, transparent 100%)');
+  const [saladIngredientsSprite, setSaladIngredientsSprite] = useState('/images/ingredients_sprite.png');
+  const [saladItem1Name, setSaladItem1Name] = useState('Cheddar Cheese');
+  const [saladItem2Name, setSaladItem2Name] = useState('Lettuce');
+  const [saladItem3Name, setSaladItem3Name] = useState('Tomato');
+  const [saladItem4Name, setSaladItem4Name] = useState('Pickle');
 
   // Summer Campaign Settings State
   const [summerBgGradient, setSummerBgGradient] = useState('radial-gradient(circle at 20% 10%, rgba(255,243,186,0.55) 0%, rgba(253,186,116,0.2) 50%, transparent 100%)');
@@ -447,6 +455,16 @@ export default function UIAtmosphereManager() {
         setGridBoardRibbonText(config.grid_board_ribbon_text || '');
         setGridCards(config.grid_cards || []);
         
+        // Premium Salad Hero Settings
+        if (config.premium_salad_settings) {
+          setSaladBgGradient(config.premium_salad_settings.background_gradient || 'radial-gradient(circle at 20% 10%, rgba(217, 230, 221, 0.55) 0%, rgba(25, 41, 30, 0.2) 50%, transparent 100%)');
+          setSaladIngredientsSprite(config.premium_salad_settings.ingredients_sprite_url || '/images/ingredients_sprite.png');
+          setSaladItem1Name(config.premium_salad_settings.item1_name || 'Cheddar Cheese');
+          setSaladItem2Name(config.premium_salad_settings.item2_name || 'Lettuce');
+          setSaladItem3Name(config.premium_salad_settings.item3_name || 'Tomato');
+          setSaladItem4Name(config.premium_salad_settings.item4_name || 'Pickle');
+        }
+
         // Summer Campaign Settings
         if (config.summer_campaign_settings) {
           setSummerBgGradient(config.summer_campaign_settings.background_gradient);
@@ -598,6 +616,14 @@ export default function UIAtmosphereManager() {
           hero_subtitle: summerHeroSub,
           drinks: summerDrinks,
           categories: summerCategories
+        },
+        premium_salad_settings: {
+          background_gradient: saladBgGradient,
+          ingredients_sprite_url: saladIngredientsSprite,
+          item1_name: saladItem1Name,
+          item2_name: saladItem2Name,
+          item3_name: saladItem3Name,
+          item4_name: saladItem4Name
         }
       });
       setSaveSuccess(true);
@@ -1315,7 +1341,7 @@ export default function UIAtmosphereManager() {
               >
                 <option value="slider">Platter Slider (Default)</option>
                 <option value="grid_board">Campaign Grid Board (Blinkit Grid)</option>
-                <option value="summer_sips">Summer Sips Mockup</option>
+                <option value="premium_salad">Premium Salad Hero (Stitch)</option>
               </select>
             </div>
 
@@ -1770,7 +1796,7 @@ export default function UIAtmosphereManager() {
                     >
                       <option value="slider">Platter Slider (Default)</option>
                       <option value="grid_board">Campaign Grid Board (Blinkit Grid)</option>
-                      <option value="summer_sips">Summer Sips Mockup</option>
+                      <option value="premium_salad">Premium Salad Hero (Stitch)</option>
                     </select>
                   </div>
 
@@ -2973,7 +2999,7 @@ export default function UIAtmosphereManager() {
         >
           <h3 className="font-serif italic text-lg text-white border-b border-[#302117]/60 pb-2">Atmosphere Media Uploader</h3>
 
-          <div className="grid grid-cols-3 bg-[#070402] border border-[#302117] rounded-xl p-1 text-center font-mono text-[9.5px] uppercase tracking-wider gap-0.5">
+          <div className="grid grid-cols-4 bg-[#070402] border border-[#302117] rounded-xl p-1 text-center font-mono text-[9.5px] uppercase tracking-wider gap-0.5">
             <button
               type="button"
               onClick={() => {
@@ -3010,24 +3036,13 @@ export default function UIAtmosphereManager() {
             <button
               type="button"
               onClick={() => {
-                setImageTab('summer_drink');
+                setImageTab('salad_sprite');
                 setUploadFile(null);
                 setUploadSuccess(false);
               }}
-              className={`py-1.5 px-2 rounded-lg transition-all ${imageTab === 'summer_drink' ? 'bg-[#f8bc51] text-[#0A0604] font-bold' : 'text-[#d4c4b0] hover:text-white'}`}
+              className={`py-1.5 px-1 rounded-lg transition-all ${imageTab === 'salad_sprite' ? 'bg-[#f8bc51] text-[#0A0604] font-bold' : 'text-[#d4c4b0] hover:text-white'}`}
             >
-              Drink
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setImageTab('summer_cat');
-                setUploadFile(null);
-                setUploadSuccess(false);
-              }}
-              className={`py-1.5 px-2 rounded-lg transition-all ${imageTab === 'summer_cat' ? 'bg-[#f8bc51] text-[#0A0604] font-bold' : 'text-[#d4c4b0] hover:text-white'}`}
-            >
-              Cat Icon
+              Sprite
             </button>
           </div>
 
@@ -3041,11 +3056,11 @@ export default function UIAtmosphereManager() {
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
                 {uploadFile ? (
-                  <div className="flex flex-col items-center gap-1.5">
-                    <ImageIcon className="text-[#f8bc51] w-7 h-7" />
+                  <div className="flex flex-col items-center gap-1">
+                    <CheckCircle className="text-[#10B981] w-8 h-8 animate-bounce" />
                     <p className="text-white text-xs truncate max-w-[180px] font-semibold">{uploadFile.name}</p>
                     <p className="text-[9px] text-[#d4c4b0]/40 font-mono">{(uploadFile.size / 1024).toFixed(1)} KB</p>
                   </div>
@@ -3058,7 +3073,9 @@ export default function UIAtmosphereManager() {
                           ? 'Upload background cover' 
                           : imageTab === 'slide' 
                             ? 'Upload transparent PNG'
-                            : 'Upload Grid Promo Tile'}
+                            : imageTab === 'grid_card'
+                              ? 'Upload Grid Promo Tile'
+                              : 'Upload Ingredients Sprite'}
                       </p>
                       <p className="text-[9px] text-[#d4c4b0]/50 mt-0.5 font-mono">Click or drag image here</p>
                     </div>
@@ -3084,9 +3101,7 @@ export default function UIAtmosphereManager() {
                       ? 'Upload Slide Photo'
                       : imageTab === 'grid_card'
                         ? 'Upload Grid Tile Graphic'
-                        : imageTab === 'summer_drink'
-                          ? 'Upload Drink Image'
-                          : 'Upload Category Icon'
+                        : 'Upload Salad Ingredients Sprite'
                 )}
               </button>
 
@@ -3130,23 +3145,12 @@ export default function UIAtmosphereManager() {
                 </div>
               )}
 
-              {imageTab === 'summer_drink' && drinkImageUrl && (
+              {imageTab === 'salad_sprite' && saladIngredientsSprite && (
                 <div className="bg-[#070402]/60 border border-[#302117] rounded-xl p-3.5 flex flex-col gap-2">
-                  <span className="font-mono text-[9px] text-[#f8bc51] font-bold uppercase tracking-widest">Uploaded Drink Image</span>
+                  <span className="font-mono text-[9px] text-[#f8bc51] font-bold uppercase tracking-widest">Uploaded Salad Sprite Image</span>
                   <div className="flex items-center justify-center p-4 bg-[#0A0604] border border-[#302117] rounded-lg">
                     <div className="relative w-full h-32 flex items-center justify-center bg-[#1c1512] border border-[#f8bc51]/10 rounded-lg overflow-hidden">
-                      <img src={drinkImageUrl} alt="Drink Preview" className="max-w-full max-h-full object-contain" style={{ mixBlendMode: drinkBlendMode || 'normal' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {imageTab === 'summer_cat' && catIconValue && (
-                <div className="bg-[#070402]/60 border border-[#302117] rounded-xl p-3.5 flex flex-col gap-2">
-                  <span className="font-mono text-[9px] text-[#f8bc51] font-bold uppercase tracking-widest">Uploaded Category Icon</span>
-                  <div className="flex items-center justify-center p-4 bg-[#0A0604] border border-[#302117] rounded-lg">
-                    <div className="relative w-16 h-16 flex items-center justify-center bg-[#1c1512] border border-[#f8bc51]/10 rounded-lg overflow-hidden">
-                      <img src={catIconValue} alt="Category Icon Preview" className="max-w-full max-h-full object-contain" style={{ mixBlendMode: catBlendMode || 'normal' }} />
+                      <img src={saladIngredientsSprite} alt="Salad Sprite Preview" className="max-w-full max-h-full object-contain animate-pulse" />
                     </div>
                   </div>
                 </div>
@@ -3165,7 +3169,7 @@ export default function UIAtmosphereManager() {
                         ? 'Slide image uploaded. Continue completing the slide details on the left and save.'
                         : imageTab === 'grid_card'
                           ? 'Grid Tile image uploaded. Continue editing card details in the layout panel and save.'
-                          : 'Image uploaded. Return to the form on the left to save.'}
+                          : 'Salad ingredients sprite uploaded. Return to the Premium Salad Hero CMS to save.'}
                   </p>
                 </div>
               )}
@@ -3284,35 +3288,33 @@ export default function UIAtmosphereManager() {
                     </div>
                   )}
                 </div>
-              ) : effectiveLayoutMode === 'summer_sips' ? (
-                <div className="flex-1 flex flex-col items-center justify-center rounded-2xl p-2 my-2 relative overflow-y-auto border border-white/5 shadow-inner bg-black/40 backdrop-blur-md max-h-[290px] scrollbar-thin select-none">
-                  <h4 className="text-[10px] font-bold text-amber-400 mb-2 font-serif italic uppercase tracking-widest">{summerHeroTitle || 'Summer Chill Zone'}</h4>
-                  <div className="flex gap-2 w-full justify-center">
-                    {summerDrinks.map((drink: any) => (
-                      <div key={drink.id} className="w-16 h-20 bg-white/5 border border-amber-500/20 rounded-xl relative flex flex-col items-center overflow-hidden">
-                        <div className="absolute inset-0">
-                           <ResizableImage initialScale={drink.imageScale || 1.0} onScaleChange={(sc) => updateSummerDrinkScale(drink.id, sc)}>
-                             <img src={drink.imageUrl} className="w-full h-full object-contain pointer-events-none" style={{ mixBlendMode: drink.blendMode || 'normal' }} />
-                           </ResizableImage>
-                        </div>
-                        <span className="mt-auto mb-1 text-[5px] text-white bg-black/70 px-1 rounded truncate w-14 z-10 backdrop-blur-sm">{drink.title}</span>
-                      </div>
-                    ))}
+              ) : effectiveLayoutMode === 'premium_salad' ? (
+                <div className="flex-1 flex flex-col items-center justify-center rounded-2xl p-3 my-2 relative border border-[#bccbb9]/20 shadow-inner bg-[#002109]/30 backdrop-blur-md max-h-[290px] overflow-hidden select-none w-full">
+                  {/* Orbiting simulation in mini-preview */}
+                  <div className="relative w-36 h-36 border border-white/10 rounded-full flex items-center justify-center animate-[spin_60s_linear_infinite] pointer-events-none">
+                    <div className="absolute top-0 w-7 h-7 rounded-full bg-white shadow overflow-hidden border border-stone-200">
+                      <img className="salad-quadrant-image salad-quad-tl" src={saladIngredientsSprite} />
+                    </div>
+                    <div className="absolute right-0 w-7 h-7 rounded-full bg-white shadow overflow-hidden border border-stone-200">
+                      <img className="salad-quadrant-image salad-quad-tr" src={saladIngredientsSprite} />
+                    </div>
+                    <div className="absolute bottom-0 w-7 h-7 rounded-full bg-white shadow overflow-hidden border border-stone-200">
+                      <img className="salad-quadrant-image salad-quad-bl" src={saladIngredientsSprite} />
+                    </div>
+                    <div className="absolute left-0 w-7 h-7 rounded-full bg-white shadow overflow-hidden border border-stone-200">
+                      <img className="salad-quadrant-image salad-quad-br" src={saladIngredientsSprite} />
+                    </div>
                   </div>
-                  <div className="flex gap-2 mt-3 w-full justify-center">
-                    {summerCategories.map((cat: any) => (
-                      <div key={cat.id} className="w-10 h-10 bg-white/5 border border-amber-500/20 rounded-xl relative flex flex-col items-center overflow-hidden">
-                        <div className="absolute inset-0">
-                           <ResizableImage initialScale={cat.imageScale || 1.0} onScaleChange={(sc) => updateSummerCategoryScale(cat.id, sc)}>
-                             {cat.iconType === 'emoji' ? 
-                               <div className="w-full h-full flex items-center justify-center text-lg pointer-events-none">{cat.iconValue}</div> :
-                               <img src={cat.iconValue} className="w-full h-full object-contain pointer-events-none" style={{ mixBlendMode: cat.blendMode || 'normal' }} />
-                             }
-                           </ResizableImage>
-                        </div>
-                        <span className="mt-auto mb-0.5 text-[4px] text-white bg-black/70 px-1 rounded z-10 backdrop-blur-sm truncate w-8 text-center">{cat.title}</span>
-                      </div>
-                    ))}
+                  {/* Active platter inside orbit */}
+                  <div className="absolute w-20 h-20 rounded-full overflow-hidden flex items-center justify-center pointer-events-none z-20">
+                    {displayPreviewSlides[previewSlideIndex] ? (
+                      <img src={displayPreviewSlides[previewSlideIndex].image_url} alt="Platter" className="max-w-[85%] max-h-[85%] object-contain" />
+                    ) : (
+                      <span className="text-[6px] text-white">No Item</span>
+                    )}
+                  </div>
+                  <div className="absolute bottom-2 bg-black/60 px-3 py-1 rounded-full text-white font-mono text-[7px] border border-white/10 z-20">
+                    Premium Salad Hero (Stitch)
                   </div>
                 </div>
               ) : (

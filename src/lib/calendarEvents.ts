@@ -10,7 +10,7 @@ export interface CalendarEventConfig {
   banner_color: UIConfig['banner_color'];
   bg_image?: string;
   featuredItemIds?: string[];
-  layout_mode?: 'slider' | 'grid_board' | 'summer_sips';
+  layout_mode?: 'slider' | 'grid_board' | 'summer_sips' | 'premium_salad';
   grid_board_title?: string;
   grid_board_badge_text?: string;
   grid_board_ribbon_text?: string;

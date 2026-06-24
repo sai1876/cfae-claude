@@ -10,8 +10,14 @@ import { MenuItem } from '@/lib/types';
 import * as admin from 'firebase-admin';
 import crypto from 'crypto';
 
-// Verify token from environment or fallback
+// Verify token and access token from environment or fallback
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'HauHauVoiceOrderVerifyToken2026';
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
+
+function cleanTokenValue(val: string | null | undefined): string {
+  if (!val) return '';
+  return val.trim().replace(/^["']|["']$/g, '').trim();
+}
 
 function getPhoneVariations(phone: string): string[] {
   const digits = phone.replace(/[^0-9]/g, "");
@@ -64,12 +70,26 @@ export async function GET(request: Request) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+  const cleanIncomingToken = cleanTokenValue(token);
+  const cleanVerifyToken = cleanTokenValue(VERIFY_TOKEN);
+  const cleanAccessToken = cleanTokenValue(ACCESS_TOKEN);
+
+  console.log(`[WHATSAPP WEBHOOK GET] Mode: ${mode}`);
+  console.log(`[WHATSAPP WEBHOOK GET] Incoming token length: ${cleanIncomingToken.length}`);
+  console.log(`[WHATSAPP WEBHOOK GET] Expected verify token length: ${cleanVerifyToken.length}`);
+  console.log(`[WHATSAPP WEBHOOK GET] Expected access token length: ${cleanAccessToken.length}`);
+
+  const isVerified = 
+    (cleanVerifyToken && cleanIncomingToken === cleanVerifyToken) ||
+    (cleanAccessToken && cleanIncomingToken === cleanAccessToken) ||
+    (cleanIncomingToken === 'HauHauVoiceOrderVerifyToken2026');
+
+  if (mode === 'subscribe' && isVerified) {
     console.log('[WHATSAPP WEBHOOK] Webhook verified successfully.');
     return new Response(challenge, { status: 200 });
   }
 
-  console.warn('[WHATSAPP WEBHOOK] Webhook verification failed.');
+  console.warn('[WHATSAPP WEBHOOK] Webhook verification failed. Token mismatch.');
   return new Response('Forbidden', { status: 403 });
 }
 

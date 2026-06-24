@@ -12,6 +12,7 @@ import { fetchOutlets, streamSliderItems, streamUIConfig, streamCalendarEvents }
 import AuthModal from './AuthModal';
 import CustomizationModal from './CustomizationModal';
 import SummerCampaignHero from './SummerCampaignHero';
+import PremiumSaladHero from './PremiumSaladHero';
 import { MenuItem, Outlet, UIConfig, SliderItem, GridCard } from '@/lib/types';
 import { getCalendarEventConfig, DynamicCalendarEvent } from '@/lib/calendarEvents';
 import './DynamicSliderHero.css';
@@ -763,7 +764,13 @@ export default function DynamicSliderHero() {
             </div>
           )}
 
-          {effectiveLayoutMode === 'summer_sips' ? (
+          {effectiveLayoutMode === 'premium_salad' ? (
+            <PremiumSaladHero 
+              sliderItems={sliderItems} 
+              uiConfig={uiConfig} 
+              onCustomizeItem={(item) => setCustomizingItem(item)} 
+            />
+          ) : effectiveLayoutMode === 'summer_sips' ? (
             <SummerCampaignHero />
           ) : effectiveLayoutMode === 'grid_board' ? (
             <div className="grid-board-scrollable">
