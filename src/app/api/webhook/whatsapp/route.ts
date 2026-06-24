@@ -205,7 +205,7 @@ export async function POST(request: Request) {
         }
 
         // Process chat message
-        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData)
+        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData, userDoc.id)
           .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
 
         return NextResponse.json({ success: true, message: 'Chat message processed' });
@@ -318,7 +318,7 @@ async function processVoiceOrderInBackground(
     const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
     const userData = userDoc ? userDoc.data() : undefined;
 
-    await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, transcription, userData);
+    await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, transcription, userData, userDoc ? userDoc.id : undefined);
 
   } catch (error) {
     console.error('[BACKGROUND TASK EXCEPTION] Failed to process voice note:', error);
@@ -406,7 +406,8 @@ async function processGeneralChatInBackground(
   fromPhone: string,
   normalizedFromPhone: string,
   messageText: string,
-  userData?: admin.firestore.DocumentData
+  userData?: admin.firestore.DocumentData,
+  userId?: string
 ) {
   if (!adminDb) return;
   console.log(`[BACKGROUND TASK] Starting general chat pipeline for ${fromPhone}`);
@@ -515,7 +516,7 @@ async function processGeneralChatInBackground(
 
         await adminDb.collection('voice_orders').doc(voiceOrderId).set({
           user_phone: normalizedFromPhone,
-          user_id: userData?.user_id || userDoc?.id || '',
+          user_id: userData?.user_id || userId || '',
           items: matchedItemsWithDetails,
           estimated_total: estimatedTotal,
           status: 'staged',
