@@ -118,16 +118,13 @@ export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   throw new Error("All Groq API keys in pool were exhausted or rate-limited.");
 }
 
-/**
- * Matches transcription text to active menu items using Gemini AI (with automated key rotation fallback)
- */
 export async function matchVoiceOrderToMenu(
   transcription: string,
   menuItems: MenuItem[]
 ): Promise<{ id: string; qty: number }[]> {
-  const keys = getGeminiKeys();
+  const keys = getGroqKeys();
   if (keys.length === 0) {
-    console.error("[GEMINI MATCH] No Gemini API keys found.");
+    console.error("[GROQ MATCH] No Groq API keys found.");
     return [];
   }
 
@@ -156,56 +153,61 @@ You must return a raw JSON array matching this exact schema:
 Do not return any other text, markdown blocks, formatting, or commentary. Only return the valid JSON array.
 If no items can be matched, return an empty array: []`;
 
-  const payload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: `Transcription to parse: "${transcription}"` }]
-      }
-    ],
-    systemInstruction: {
-      parts: [{ text: systemInstruction }]
-    },
-    generationConfig: {
-      responseMimeType: "application/json"
-    }
-  };
-
   // Iterate over keys to handle rate limiting (429) fallback
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
 
     try {
-      console.log(`[GEMINI MATCH] Matching transcription to catalog (Key index: ${i})...`);
-      const res = await fetch(url, {
+      console.log(`[GROQ MATCH] Matching transcription to catalog (Key index: ${i})...`);
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${key}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: `Transcription to parse: "${transcription}"` }
+          ],
+          temperature: 0.1,
+          response_format: { type: "json_object" }
+        })
       });
 
       if (res.status === 429) {
-        console.warn(`[GEMINI RATE LIMIT] Key index ${i} rate limited (429). Attempting rotation...`);
+        console.warn(`[GROQ RATE LIMIT] Key index ${i} rate limited (429). Attempting rotation...`);
         continue; // Try next key
       }
 
       if (!res.ok) {
-        throw new Error(`Gemini API error: ${res.statusText}`);
+        throw new Error(`Groq API error: ${res.statusText}`);
       }
 
       const responseData = await res.json();
-      const resultText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-      console.log(`[GEMINI MATCH SUCCESS] Result raw: ${resultText.trim()}`);
+      const resultText = responseData.choices?.[0]?.message?.content || '{"matches": []}';
+      console.log(`[GROQ MATCH SUCCESS] Result raw: ${resultText.trim()}`);
 
-      const matched = JSON.parse(resultText.trim());
-      if (Array.isArray(matched)) {
-        return matched as { id: string; qty: number }[];
+      // Llama might wrap it in an object if forced to use JSON mode, or it might just return the array.
+      // Let's parse it safely.
+      const parsed = JSON.parse(resultText.trim());
+      
+      // If the LLM returned {"items": [...]} or similar
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          // find the first array value inside the object
+          const possibleArray = Object.values(parsed).find(Array.isArray);
+          if (possibleArray) {
+              return possibleArray as { id: string; qty: number }[];
+          }
+      }
+
+      if (Array.isArray(parsed)) {
+        return parsed as { id: string; qty: number }[];
       }
       return [];
     } catch (error: any) {
-      console.error(`[GEMINI MATCH ERROR] Key index ${i} failed:`, error.message || error);
+      console.error(`[GROQ MATCH ERROR] Key index ${i} failed:`, error.message || error);
       if (i === keys.length - 1) {
         return [];
       }
