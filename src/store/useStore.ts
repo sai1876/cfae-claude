@@ -36,6 +36,7 @@ interface AppState {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
+  setCart: (items: CartItem[]) => void;
 
   // Real-time Cloud Sync
   activeOrders: OrderDocument[];
@@ -92,6 +93,7 @@ export const useStore = create<AppState>()(
         })
       })),
       clearCart: () => set({ cart: [] }),
+      setCart: (items) => set({ cart: items }),
 
       activeOrders: [],
       setActiveOrders: (activeOrders) => set({ activeOrders })

@@ -169,7 +169,7 @@ const CelebrationOverlay = ({ active }: { active: boolean }) => {
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, removeFromCart, updateQuantity, clearCart, user, userProfile, customerOutlet, setCustomerOutlet } = useStore();
+  const { cart, setCart, removeFromCart, updateQuantity, clearCart, user, userProfile, customerOutlet, setCustomerOutlet } = useStore();
   const [magicLoading, setMagicLoading] = useState(false);
 
   // Handle WhatsApp Magic Link Auto-Login
@@ -195,9 +195,7 @@ export default function CartPage() {
             
             // 2. Load items into cart
             if (data.items && data.items.length > 0) {
-              // We need to inject them directly via useStore.setState or map them
-              // since we don't have an addMultipleToCart function, we'll just set it
-              useStore.setState({ cart: data.items });
+              setCart(data.items);
             }
 
             triggerToast("Successfully loaded your WhatsApp order!", "success");
@@ -696,6 +694,34 @@ export default function CartPage() {
         >
           Explore Menu
         </button>
+
+        {/* Toast */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              style={{
+                position: 'fixed',
+                bottom: 24,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: toast.type === 'error' ? '#ef4444' : toast.type === 'success' ? '#10b981' : '#3b82f6',
+                color: '#fff',
+                padding: '12px 24px',
+                borderRadius: 30,
+                fontSize: 14,
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {toast.message}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       const menuMatch = menuItems.find((m: any) => m.name === item.name);
       
       return {
-        cartItemId: Math.random().toString(36).substring(7),
+        id: Math.random().toString(36).substring(7),
         menuItemId: menuMatch ? menuMatch.item_id : 'unknown',
         name: item.name,
         price: item.unit_price,
