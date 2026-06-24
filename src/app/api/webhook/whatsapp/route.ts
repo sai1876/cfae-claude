@@ -517,9 +517,15 @@ async function processGeneralChatInBackground(
     // 2. Fetch current weather from Open-Meteo API
     let weatherLine = 'Weather unknown.';
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
+      
       const wRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,apparent_temperature&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,apparent_temperature&timezone=auto`,
+        { signal: controller.signal }
       );
+      clearTimeout(timeoutId);
+      
       if (wRes.ok) {
         const wData = await wRes.json();
         const temp = Math.round(wData.current.temperature_2m);
@@ -535,7 +541,7 @@ async function processGeneralChatInBackground(
         weatherLine = `It's ${temp}°C outside (feels like ${feels}°C) and ${condition}.`;
       }
     } catch (err) {
-      console.warn('[BACKGROUND CHAT] Failed to fetch weather:', err);
+      console.warn('[BACKGROUND CHAT] Failed to fetch weather (Timeout or Error):', err);
     }
 
     // 3. Fetch active menu catalog
