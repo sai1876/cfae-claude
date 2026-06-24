@@ -145,13 +145,15 @@ Your task is to analyze the student's voice transcription and extract the items 
 Match the items mentioned to the closest available item in the catalog.
 Only return items that have a high-confidence match. If an item is mentioned but not in the catalog, ignore it.
 
-You must return a raw JSON array matching this exact schema:
-[
-  { "id": "matched_menu_item_id", "qty": number_of_pieces }
-]
+You must return a raw JSON object matching this exact schema:
+{
+  "matches": [
+    { "id": "matched_menu_item_id", "qty": number_of_pieces }
+  ]
+}
 
-Do not return any other text, markdown blocks, formatting, or commentary. Only return the valid JSON array.
-If no items can be matched, return an empty array: []`;
+Do not return any other text, markdown blocks, formatting, or commentary.
+If no items can be matched, return: {"matches": []}`;
 
   // Iterate over keys to handle rate limiting (429) fallback
   for (let i = 0; i < keys.length; i++) {
@@ -189,16 +191,20 @@ If no items can be matched, return an empty array: []`;
       const resultText = responseData.choices?.[0]?.message?.content || '{"matches": []}';
       console.log(`[GROQ MATCH SUCCESS] Result raw: ${resultText.trim()}`);
 
-      // Llama might wrap it in an object if forced to use JSON mode, or it might just return the array.
-      // Let's parse it safely.
       const parsed = JSON.parse(resultText.trim());
       
-      // If the LLM returned {"items": [...]} or similar
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          // find the first array value inside the object
+      if (parsed && Array.isArray(parsed.matches)) {
+        return parsed.matches as { id: string; qty: number }[];
+      }
+      
+      // Fallback if it returned just the array inside the object unexpectedly
+      if (parsed && typeof parsed === 'object') {
           const possibleArray = Object.values(parsed).find(Array.isArray);
           if (possibleArray) {
               return possibleArray as { id: string; qty: number }[];
+          }
+          if (parsed.id && parsed.qty !== undefined) {
+              return [parsed as { id: string; qty: number }];
           }
       }
 
