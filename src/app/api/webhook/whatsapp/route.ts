@@ -510,15 +510,20 @@ async function processGeneralChatInBackground(
       if (matchedItemsWithDetails.length > 0) {
         // Stage the order in Firestore
         const voiceOrderId = crypto.randomUUID();
+        const now = admin.firestore.Timestamp.now();
+        const expiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + 15 * 60 * 1000); // 15 min expiry for magic link
+
         await adminDb.collection('voice_orders').doc(voiceOrderId).set({
           user_phone: normalizedFromPhone,
+          user_id: userData?.user_id || userDoc?.id || '',
           items: matchedItemsWithDetails,
           estimated_total: estimatedTotal,
           status: 'staged',
-          created_at: Date.now()
+          created_at: now,
+          expires_at: expiresAt
         });
 
-        const checkoutLink = `https://hauhau.menu/checkout/voice?session=${voiceOrderId}`;
+        const checkoutLink = `https://hauhau.menu/cart?session=${voiceOrderId}&magic=true`;
         
         orderContextText = `\n\nCRITICAL ORDER CONTEXT: The user just ordered the following items: ${summaryRows.slice(0, -2)}. ` +
                            `Their order has been automatically staged and added to their cart! ` +

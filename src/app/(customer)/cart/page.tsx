@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Trash2, ArrowRight, Tag, Info, RotateCw, MapPin, CheckCircle2, AlertCircle, X, PartyPopper, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { signInWithCustomToken } from 'firebase/auth';
 import { createOrder, updateUserProfile, fetchOutlets, fetchOffers, fetchMenuItems } from '@/lib/dbService';
 import { SavedAddress } from '@/lib/types';
 
@@ -169,6 +170,53 @@ const CelebrationOverlay = ({ active }: { active: boolean }) => {
 export default function CartPage() {
   const router = useRouter();
   const { cart, removeFromCart, updateQuantity, clearCart, user, userProfile, customerOutlet, setCustomerOutlet } = useStore();
+  const [magicLoading, setMagicLoading] = useState(false);
+
+  // Handle WhatsApp Magic Link Auto-Login
+  useEffect(() => {
+    const handleMagicLink = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const session = urlParams.get('session');
+      const magic = urlParams.get('magic');
+
+      if (session && magic === 'true') {
+        setMagicLoading(true);
+        try {
+          const res = await fetch('/api/auth/magic-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session })
+          });
+          const data = await res.json();
+          
+          if (data.success && data.token) {
+            // 1. Sign in with Custom Token
+            await signInWithCustomToken(auth, data.token);
+            
+            // 2. Load items into cart
+            if (data.items && data.items.length > 0) {
+              // We need to inject them directly via useStore.setState or map them
+              // since we don't have an addMultipleToCart function, we'll just set it
+              useStore.setState({ cart: data.items });
+            }
+
+            triggerToast("Successfully loaded your WhatsApp order!", "success");
+          } else {
+            triggerToast(data.error || "Magic link expired or invalid.", "error");
+          }
+        } catch (e) {
+          console.error("Magic link error:", e);
+          triggerToast("Failed to connect magic session.", "error");
+        } finally {
+          setMagicLoading(false);
+          // Clean the URL to remove the session params
+          router.replace('/cart');
+        }
+      }
+    };
+    
+    handleMagicLink();
+  }, [router]);
 
   // Toast & Celebration States
   const [toast, setToast] = useState<{
@@ -621,6 +669,17 @@ export default function CartPage() {
         </motion.div>
         <h2 style={{ color: 'var(--foreground)', fontSize: 24, fontWeight: 700, marginBottom: 10 }}>Order Placed!</h2>
         <p style={{ color: 'var(--muted-foreground)', textAlign: 'center' }}>Your order is being sent to the kitchen.</p>
+      </div>
+    );
+  }
+
+  if (magicLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid rgba(212,163,84,0.3)', borderTopColor: '#d4a354', animation: 'spin 1s linear infinite', marginBottom: 20 }} />
+        <h2 style={{ color: 'var(--foreground)', fontSize: 20, fontWeight: 700, marginBottom: 10 }}>Loading WhatsApp Order...</h2>
+        <p style={{ color: 'var(--muted-foreground)', textAlign: 'center', fontSize: 13 }}>Securely signing you in and syncing your cart.</p>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
