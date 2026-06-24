@@ -174,7 +174,7 @@ If no items can be matched, return an empty array: []`;
   // Iterate over keys to handle rate limiting (429) fallback
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
 
     try {
       console.log(`[GEMINI MATCH] Matching transcription to catalog (Key index: ${i})...`);
