@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cafe-claude-v3';
+const CACHE_NAME = 'cafe-claude-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

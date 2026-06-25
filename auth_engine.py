@@ -237,8 +237,45 @@ def poll_status(token: str):
         
     return {"is_phone_verified": data.get("is_verified", False)}
 
+# --- EMAIL SENDER FUNCTION ---
+def send_verification_email(email_address: str, verify_link: str):
+    """Sends verification email in the background to avoid blocking the API thread."""
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASS")
+    if not smtp_user or not smtp_pass:
+        print("[SMTP] Skipping email verification, credentials missing.")
+        return
+        
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = email_address
+        msg['Subject'] = "Verify your Hau Hau Profile 🌟"
+        
+        body = f"""Ustaad! Welcome to Hau Hau.
+
+Please click the link below to verify your email and activate your account:
+{verify_link}
+
+Let's get cooking!"""
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # 10-second timeout to prevent indefinite hangs if ports are blocked
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+            print(f"[SMTP] Email verification successfully sent to {email_address}")
+    except Exception as e:
+        print(f"[SMTP ERROR] Verification email delivery failed (likely blocked port): {e}")
+
+
 @app.post("/api/auth/register")
-def register(payload: RegisterRequest):
+def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
     """
     Atomic Signup: creates a disabled Firebase Auth user, stages the user profile in Firestore
     with is_active: False, and generates/sends an email verification link.
@@ -327,40 +364,16 @@ def register(payload: RegisterRequest):
         )
         dev_verify_link = auth.generate_email_verification_link(payload.email, action_code_settings)
         
-        # Send Email via SMTP if credentials exist
-        smtp_user = os.environ.get("SMTP_USER")
-        smtp_pass = os.environ.get("SMTP_PASS")
-        if smtp_user and smtp_pass:
-            import smtplib
-            from email.mime.text import MIMEText
-            from email.mime.multipart import MIMEMultipart
-
-            msg = MIMEMultipart()
-            msg['From'] = smtp_user
-            msg['To'] = payload.email
-            msg['Subject'] = "Verify your Hau Hau Profile 🌟"
-            
-            body = f"""Ustaad! Welcome to Hau Hau.
-
-Please click the link below to verify your email and activate your account:
-{dev_verify_link}
-
-Let's get cooking!"""
-            msg.attach(MIMEText(body, 'plain'))
-            
-            with smtplib.SMTP('smtp.gmail.com', 587) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.send_message(msg)
-                print(f"[SMTP] Email verification successfully sent to {payload.email}")
+        # Queue email sending task in the background
+        background_tasks.add_task(send_verification_email, payload.email, dev_verify_link)
     except Exception as e:
-        print(f"[SMTP ERROR] Verification email delivery failed: {e}")
+        print(f"[VERIFICATION LINK ERROR] Failed to generate link: {e}")
 
     return {
         "status": "registered_inactive",
         "message": "User registered. Activation link has been sent to email.",
         "uid": uid,
-        "dev_verify_link": dev_verify_link # Exposed in dev environments for easy verification
+        "dev_verify_link": dev_verify_link
     }
 
 @app.post("/api/auth/verify-email-listener")

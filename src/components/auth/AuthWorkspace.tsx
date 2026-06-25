@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserProfile } from '@/lib/dbService';
 
 // Get backend URL from env (Force clean Vercel build configuration)
 const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL;
@@ -187,53 +190,46 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
     setError(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone,
-          name,
-          email,
-          password,
-          referral_code: referral || null
-        })
-      });
+      // 1. Create User in Firebase Auth directly
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = credential.user;
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || "Registration failed. Please check parameters.");
-      }
+      // 2. Send Native Firebase verification mail
+      await sendEmailVerification(user);
 
-      // Staging complete, move to lockout screen
+      // 3. Create profile document in Firestore
+      await createUserProfile(user.uid, phone, name, email, referral);
+
+      // 4. Staging complete, move to lockout screen
       setSignupStep('lockout');
-      if (data.dev_verify_link) {
-        setEmailSentUrl(data.dev_verify_link); // Capture verification link for mock environment
-      }
+      setEmailSentUrl("native_firebase"); // Set to non-null value so status button displays
     } catch (err: any) {
+      console.error("Client signup failed:", err);
       setError(err.message || "Failed to submit profile details.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock Email Activation trigger simulation (clicking email link)
+  // Check Email Activation trigger (polls or manual action check)
   const handleMockEmailVerification = async () => {
-    if (!phone) return;
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/verify-email-listener?phone=${phone}`, {
-        method: 'POST'
-      });
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("No authenticated session found. Please try logging in again.");
+      }
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || "Verification failed.");
+      await user.reload(); // Reload user state to get latest emailVerified status
+      
+      if (!user.emailVerified) {
+        throw new Error("Email has not been verified yet. Please check your inbox and click the verification link.");
       }
 
       // Success! Account is now active. Set global store.
-      const mockUser = { uid: data.uid || "uid_" + phone.replace(/\D/g, ""), phone };
+      const mockUser = { uid: user.uid, phone: user.phoneNumber || phone };
       setUser(mockUser);
       setSuccessMessage("Ustaad! Account activated successfully. Welcome to Hau Hau!");
       setSignupStep('dashboard');
@@ -242,7 +238,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
         window.location.href = '/menu';
       }, 2000);
     } catch (err: any) {
-      setError(err.message || "Mock verification link process failed.");
+      setError(err.message || "Email verification status check failed.");
     } finally {
       setLoading(false);
     }
@@ -646,16 +642,16 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
                   </p>
                 </div>
 
-                {/* Mock environment verification triggers */}
+                {/* Email Verification Status Check */}
                 {emailSentUrl && (
                   <div className="bg-[#070402]/60 border border-[#302117] p-5 rounded-2xl flex flex-col gap-3">
-                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#d4c4b0]/40">Developer Simulator Trigger</div>
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#d4c4b0]/40">Verify Status</div>
                     <button
                       onClick={handleMockEmailVerification}
                       disabled={loading}
                       className="w-full bg-[#E8621A]/20 hover:bg-[#E8621A]/35 border border-[#E8621A]/40 text-[#f7dec4] py-3 rounded-xl font-mono text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                     >
-                      {loading ? 'Processing Activation...' : 'Simulate Email Verification Link Click 📧'}
+                      {loading ? 'Verifying...' : 'I\'ve Verified My Email 📧'}
                     </button>
                   </div>
                 )}
