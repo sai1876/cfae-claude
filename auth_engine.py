@@ -150,7 +150,11 @@ def check_phone(payload: PhoneCheckRequest):
     user_doc = find_user_by_phone(payload.phone)
     if user_doc:
         user_data = user_doc.to_dict()
-        is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+        is_active = (
+            user_data.get("is_active", False) or 
+            user_data.get("status") == "active" or 
+            user_data.get("account_status") == "active"
+        )
         
         if is_active:
             raise HTTPException(
@@ -439,7 +443,11 @@ def login(payload: LoginRequest):
     user_data = user_doc.to_dict()
     
     # 2. Check active status first
-    is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+    is_active = (
+        user_data.get("is_active", False) or 
+        user_data.get("status") == "active" or 
+        user_data.get("account_status") == "active"
+    )
     if not is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -516,7 +524,11 @@ def passwordless_login(payload: HandshakeRequest):
     user_data = user_doc.to_dict()
     
     # Block if account is inactive
-    is_active = user_data.get("is_active", False) or user_data.get("status") == "active"
+    is_active = (
+        user_data.get("is_active", False) or 
+        user_data.get("status") == "active" or 
+        user_data.get("account_status") == "active"
+    )
     if not is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
