@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cafe-claude-v1';
+const CACHE_NAME = 'cafe-claude-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -39,6 +39,12 @@ self.addEventListener('fetch', (event) => {
   
   // Skip caching third-party tracking, analytics, or non-http protocols
   if (!url.protocol.startsWith('http')) return;
+
+  // CRITICAL: Do NOT intercept or cache cross-origin requests (e.g. Firestore, Firebase Auth, maps)
+  if (url.origin !== self.location.origin) return;
+
+  // CRITICAL: Do NOT intercept or cache internal dynamic API routes
+  if (url.pathname.startsWith('/api/')) return;
   
   // Cache-first for static assets (images, fonts, scripts, stylesheets)
   const isStaticAsset = 
