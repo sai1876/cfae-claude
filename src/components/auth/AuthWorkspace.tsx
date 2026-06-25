@@ -24,7 +24,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { createUserProfile } from '@/lib/dbService';
+import { createUserProfile, updateUserProfile } from '@/lib/dbService';
 
 // Get backend URL from env (Force clean Vercel build configuration)
 const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL;
@@ -230,6 +230,16 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
       // Success! Account is now active. Set global store.
       const mockUser = { uid: user.uid, phone: user.phoneNumber || phone };
+      
+      // Update Firestore user profile status to active
+      await updateUserProfile(user.uid, {
+        email_verified: true,
+        is_email_verified: true,
+        account_status: 'active',
+        status: 'active',
+        is_active: true
+      });
+
       setUser(mockUser);
       setSuccessMessage("Ustaad! Account activated successfully. Welcome to Hau Hau!");
       setSignupStep('dashboard');

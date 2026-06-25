@@ -75,11 +75,14 @@ export const createUserProfile = async (
     phone,
     name: name || "",
     student_email: studentEmail || "",
-    email_verified: !!studentEmail,
+    email_verified: false,
     points: 100, // Welcome points!
     referral_code: referralCode,
     referred_by: referredBy || "",
-    account_status: "active",
+    account_status: "inactive",
+    status: "inactive",
+    is_active: false,
+    is_email_verified: false,
     created_at: Date.now()
   };
 

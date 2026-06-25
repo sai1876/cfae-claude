@@ -22,12 +22,15 @@ export interface UserDocument {
   points: number;
   referral_code: string;
   referred_by?: string;
-  account_status: 'active' | 'suspended' | 'blacklisted';
+  account_status: 'active' | 'suspended' | 'blacklisted' | 'inactive';
   created_at: number; // Unix timestamp
   stress_coupons_issued?: { month: string; count: number; }; // Tracks coupon usage per month (format: YYYY-MM)
   addresses?: SavedAddress[];
   total_completed_orders?: number;
   successful_referrals?: number;
+  status?: string;
+  is_active?: boolean;
+  is_email_verified?: boolean;
 }
 
 // Menu Items
