@@ -23,7 +23,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
 
-// Get backend URL from env or default to localhost:8000 (FastAPI engine)
+// Get backend URL from env (Force clean Vercel build configuration)
 const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL;
 
 interface AuthWorkspaceProps {
