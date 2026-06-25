@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Phone, 
-  Lock, 
-  Mail, 
-  Users, 
-  ArrowRight, 
-  CheckCircle, 
-  AlertTriangle, 
-  QrCode, 
+import {
+  Phone,
+  Lock,
+  Mail,
+  Users,
+  ArrowRight,
+  CheckCircle,
+  AlertTriangle,
+  QrCode,
   Smartphone,
   Check,
   Send,
@@ -24,7 +24,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
 
 // Get backend URL from env or default to localhost:8000 (FastAPI engine)
-const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL;
 
 interface AuthWorkspaceProps {
   defaultTab?: 'signup' | 'login';
@@ -34,13 +34,13 @@ interface AuthWorkspaceProps {
 
 export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, onClose }: AuthWorkspaceProps) {
   const { setUser, setUserProfile } = useStore();
-  
+
   // Tab: 'login' or 'signup'
   const [tab, setTab] = useState<'login' | 'signup'>(defaultTab);
-  
+
   // Signup State Machine Steps: 'phone' | 'handshake' | 'profile' | 'lockout' | 'dashboard'
   const [signupStep, setSignupStep] = useState<'phone' | 'handshake' | 'profile' | 'lockout' | 'dashboard'>('phone');
-  
+
   // Login State Machine Steps: 'credentials' | 'handshake_login' | 'handshake_login_poll'
   const [loginStep, setLoginStep] = useState<'credentials' | 'handshake_login'>('credentials');
 
@@ -88,11 +88,11 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
               // Option B Passwordless Login success
               // For demo simulation, we fully verify and complete login.
               setSuccessMessage("Ustaad! Instant Login Authenticated.");
-              
+
               // Mock auth success and set values in store
               const mockUser = { uid: "user_" + phone.replace(/\D/g, ""), phone };
               setUser(mockUser);
-              
+
               setTimeout(() => {
                 window.location.href = '/menu';
               }, 1500);
@@ -280,10 +280,10 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
       // Authenticated! Cache validated JWT token and configure store
       localStorage.setItem('Hau Hau_jwt_session', data.token);
-      
+
       const mockUser = { uid: data.uid, phone };
       setUser(mockUser);
-      
+
       setSuccessMessage("Identity verified. Welcome back!");
       setTimeout(() => {
         window.location.href = '/menu';
@@ -366,7 +366,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
         </>
       )}
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -381,13 +381,13 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
         {/* Global tab toggles for Initial state */}
         {signupStep === 'phone' && loginStep === 'credentials' && (
           <div className="flex bg-[#120a06]/40 border border-[#302117]/80 rounded-2xl p-1 mb-6">
-            <button 
+            <button
               onClick={() => { setTab('signup'); setError(null); }}
               className={`flex-1 py-2 rounded-xl text-xs uppercase tracking-widest font-mono font-bold transition-all ${tab === 'signup' ? 'bg-[#f8bc51] text-[#0A0604]' : 'text-[#d4c4b0]/60 hover:text-white'}`}
             >
               Sign Up
             </button>
-            <button 
+            <button
               onClick={() => { setTab('login'); setError(null); }}
               className={`flex-1 py-2 rounded-xl text-xs uppercase tracking-widest font-mono font-bold transition-all ${tab === 'login' ? 'bg-[#f8bc51] text-[#0A0604]' : 'text-[#d4c4b0]/60 hover:text-white'}`}
             >
@@ -399,7 +399,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
         {/* MAIN PANEL CONTENT */}
         <div className="bg-[#120a06]/55 backdrop-blur-2xl rounded-3xl border border-[#302117]/80 p-8 shadow-2xl relative">
           {isModal && onClose && (
-            <button 
+            <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-[#d4c4b0]/40 hover:text-white rounded-full transition-colors z-20"
               aria-label="Close modal"
@@ -408,12 +408,12 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
               <X size={16} />
             </button>
           )}
-          
+
           <AnimatePresence mode="wait">
-            
+
             {/* SIGNUP STEP 1: PHONE COLLECTION */}
             {tab === 'signup' && signupStep === 'phone' && (
-              <motion.form 
+              <motion.form
                 key="signup-phone"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -459,7 +459,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* SIGNUP STEP 2: WHATSAPP HANDSHAKEA REDIRECT & POLL */}
             {tab === 'signup' && signupStep === 'handshake' && (
-              <motion.div 
+              <motion.div
                 key="signup-handshake"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -520,8 +520,8 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
                   </div>
                 )}
 
-                <button 
-                  onClick={handleResetFlow} 
+                <button
+                  onClick={handleResetFlow}
                   className="text-[10px] font-mono uppercase tracking-wider text-[#d4c4b0]/40 hover:text-white transition-colors"
                 >
                   Cancel &amp; Restart
@@ -531,7 +531,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* SIGNUP STEP 3: UNIFIED PROFILE FORM */}
             {tab === 'signup' && signupStep === 'profile' && (
-              <motion.form 
+              <motion.form
                 key="signup-profile"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -626,7 +626,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* SIGNUP STEP 4: MANDATORY EMAIL VERIFICATION LOCKOUT */}
             {signupStep === 'lockout' && (
-              <motion.div 
+              <motion.div
                 key="signup-lockout"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -666,7 +666,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={handleResetFlow}
                   className="text-[10px] font-mono uppercase tracking-wider text-[#d4c4b0]/40 hover:text-white transition-colors"
                 >
@@ -677,7 +677,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* LOGIN TAB CORE SCREEN */}
             {tab === 'login' && loginStep === 'credentials' && (
-              <motion.form 
+              <motion.form
                 key="login-credentials"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -759,7 +759,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* LOGIN STEP: PASSWORDLESS WHATSAPP VERIFY & POLL */}
             {tab === 'login' && loginStep === 'handshake_login' && (
-              <motion.div 
+              <motion.div
                 key="login-handshake"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -818,7 +818,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={handleResetFlow}
                   className="text-[10px] font-mono uppercase tracking-wider text-[#d4c4b0]/40 hover:text-white transition-colors"
                 >
@@ -829,7 +829,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
 
             {/* DASHBOARD TRANSITION FEEDBACK */}
             {signupStep === 'dashboard' && (
-              <motion.div 
+              <motion.div
                 key="signup-dashboard"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -854,7 +854,7 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
           {/* Success messages floating banner */}
           <AnimatePresence>
             {successMessage && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
