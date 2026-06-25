@@ -75,6 +75,7 @@ export const createUserProfile = async (
     phone,
     name: name || "",
     student_email: studentEmail || "",
+    email: studentEmail || "",
     email_verified: false,
     points: 100, // Welcome points!
     referral_code: referralCode,

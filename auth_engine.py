@@ -454,7 +454,7 @@ def login(payload: LoginRequest):
             detail="Account inactive. Please check your email to verify your profile first."
         )
 
-    email = user_data.get("email")
+    email = user_data.get("email") or user_data.get("student_email")
     if not email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -15,6 +15,7 @@ export interface UserDocument {
   phone: string;
   name?: string;
   student_email?: string;
+  email?: string;
   email_verified: boolean;
   batch_year?: number;
   department?: string;
