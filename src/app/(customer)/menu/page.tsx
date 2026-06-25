@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Star, ShoppingBag, Plus, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, X, Star, ShoppingBag, Plus, ChevronRight, ChevronDown, ChevronLeft } from 'lucide-react';
 import { fetchMenuItems, fetchOutlets, fetchOffers } from '@/lib/dbService';
 import { useStore } from '@/store/useStore';
 import { MenuItem, Offer, Outlet } from '@/lib/types';
@@ -12,6 +12,16 @@ import { MapPin, Ticket, Copy, Check } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Biryani', 'Momos', 'Burgers', 'Waffles', 'Snacks', 'Beverages'] as const;
 type Category = typeof CATEGORIES[number];
+
+const CAT_IMAGES: Record<string, string> = {
+  All: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=80',
+  Biryani: 'https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=150&auto=format&fit=crop&q=80',
+  Momos: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=150&auto=format&fit=crop&q=80',
+  Burgers: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=80',
+  Waffles: 'https://images.unsplash.com/photo-1562376502-6f769499c886?w=150&auto=format&fit=crop&q=80',
+  Snacks: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=150&auto=format&fit=crop&q=80',
+  Beverages: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=150&auto=format&fit=crop&q=80',
+};
 
 const CAT_COLORS: Record<string, [string, string]> = {
   Biryani:   ['#7c3f0e', '#4a1f05'],
@@ -94,6 +104,14 @@ export default function MenuPage() {
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -240 : 240;
+      categoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -244,33 +262,104 @@ export default function MenuPage() {
           />
         </div>
 
-        {/* Category Tabs */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none' }}>
-          {CATEGORIES.map(cat => {
-            const active = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  flexShrink: 0, padding: '6px 14px', borderRadius: 20,
-                  border: active ? '1px solid var(--primary)' : '1px solid var(--border)',
-                  background: active ? 'rgba(198,139,53,0.1)' : 'transparent',
-                  color: active ? 'var(--primary)' : 'var(--muted-foreground)',
-                  fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{ fontSize: 13 }}>{CAT_EMOJIS[cat]}</span> {cat}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* ── Content ── */}
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Category circle slider "What's on your mind?" */}
+        <div style={{ marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h2 style={{ color: 'var(--foreground)', fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>What's on your mind?</h2>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button 
+                onClick={() => scrollCategories('left')}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'rgba(var(--foreground-rgb),0.04)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--foreground)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', outline: 'none', transition: 'all 0.2s'
+                }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button 
+                onClick={() => scrollCategories('right')}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'rgba(var(--foreground-rgb),0.04)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--foreground)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', outline: 'none', transition: 'all 0.2s'
+                }}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+          
+          <div 
+            ref={categoryScrollRef}
+            style={{ 
+              display: 'flex', 
+              gap: 22, 
+              overflowX: 'auto', 
+              paddingBottom: 4, 
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}
+          >
+            {CATEGORIES.map(cat => {
+              const active = activeCategory === cat;
+              return (
+                <div
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 10,
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  <div style={{
+                    width: 76,
+                    height: 76,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: active ? '3px solid var(--primary)' : '1px solid var(--border)',
+                    background: 'var(--muted)',
+                    boxShadow: active ? '0 4px 16px rgba(198,139,53,0.35)' : '0 2px 10px rgba(0,0,0,0.15)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: active ? 'scale(1.08)' : 'scale(1)',
+                  }}>
+                    <img 
+                      src={CAT_IMAGES[cat]} 
+                      alt={cat} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover' 
+                      }} 
+                    />
+                  </div>
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: active ? 700 : 500,
+                    color: active ? 'var(--primary)' : 'var(--muted-foreground)',
+                    transition: 'color 0.2s'
+                  }}>
+                    {cat}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         {/* Active promotions carousel */}
         {offers.length > 0 && (
           <div style={{ marginBottom: 12 }}>
