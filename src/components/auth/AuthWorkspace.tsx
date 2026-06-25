@@ -23,8 +23,8 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '@/store/useStore';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { createUserProfile, updateUserProfile } from '@/lib/dbService';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserProfile, updateUserProfile, getUserProfileByPhone } from '@/lib/dbService';
 
 // Get backend URL from env (Force clean Vercel build configuration)
 const BACKEND_URL = process.env.NEXT_PUBLIC_AUTH_ENGINE_URL;
@@ -266,28 +266,30 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
     setError(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password })
-      });
+      // 1. Fetch user profile from Firestore by phone variations
+      const userProfile = await getUserProfileByPhone(phone);
+      if (!userProfile) {
+        throw new Error("Incorrect phone number or password.");
+      }
 
-      const data = await res.json();
-      if (res.status === 403) {
-        // Inactive account lockout gate trigger
+      // 2. Check if the user account is active
+      const isActive = userProfile.is_active || userProfile.status === 'active' || userProfile.account_status === 'active';
+      if (!isActive) {
         setSignupStep('lockout');
-        setError(data.detail || "Account inactive. Please check email to verify profile.");
+        setError("Account inactive. Please check email to verify profile.");
         return;
       }
 
-      if (!res.ok) {
-        throw new Error(data.detail || "Incorrect phone or password.");
+      // 3. Retrieve registered email address
+      const emailAddress = userProfile.email || userProfile.student_email;
+      if (!emailAddress) {
+        throw new Error("No email registered for this account profile.");
       }
 
-      // Authenticated! Cache validated JWT token and configure store
-      localStorage.setItem('Hau Hau_jwt_session', data.token);
-
-      const mockUser = { uid: data.uid, phone };
+      // 4. Authenticate directly via Firebase Client SDK
+      const credential = await signInWithEmailAndPassword(auth, emailAddress, password);
+      
+      const mockUser = { uid: credential.user.uid, phone: userProfile.phone };
       setUser(mockUser);
 
       setSuccessMessage("Identity verified. Welcome back!");
@@ -296,7 +298,13 @@ export default function AuthWorkspace({ defaultTab = 'signup', isModal = false, 
       }, 1500);
 
     } catch (err: any) {
-      setError(err.message || "Login authentication failed.");
+      console.error("Client-side login failed:", err);
+      // Friendly messages for common Firebase Auth errors
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError("Incorrect phone number or password.");
+      } else {
+        setError(err.message || "Login authentication failed.");
+      }
     } finally {
       setLoading(false);
     }

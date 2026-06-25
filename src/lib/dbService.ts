@@ -113,6 +113,44 @@ export const getUserProfile = async (userId: string): Promise<UserDocument | nul
 };
 
 /**
+ * Retrieves user profile from Firestore by querying phone variations
+ */
+export const getUserProfileByPhone = async (phone: string): Promise<UserDocument | null> => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (!cleanPhone) return null;
+  
+  const variations = [cleanPhone, `+${cleanPhone}`];
+  if (cleanPhone.length === 10) {
+    variations.push(`+91${cleanPhone}`);
+    variations.push(`91${cleanPhone}`);
+  } else if (cleanPhone.length > 10) {
+    const last10 = cleanPhone.slice(-10);
+    variations.push(last10);
+    variations.push(`+91${last10}`);
+    variations.push(`91${last10}`);
+  }
+
+  // Filter unique variations
+  const uniqueVariations = Array.from(new Set(variations));
+
+  // Query phone field
+  const q1 = query(collection(db, USERS_COL), where("phone", "in", uniqueVariations));
+  const snap1 = await getDocs(q1);
+  if (!snap1.empty) {
+    return snap1.docs[0].data() as UserDocument;
+  }
+
+  // Query phone_number field
+  const q2 = query(collection(db, USERS_COL), where("phone_number", "in", uniqueVariations));
+  const snap2 = await getDocs(q2);
+  if (!snap2.empty) {
+    return snap2.docs[0].data() as UserDocument;
+  }
+
+  return null;
+};
+
+/**
  * Updates any field of the user's profile in Firestore
  */
 export const updateUserProfile = async (
