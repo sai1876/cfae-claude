@@ -1,30 +1,41 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { POST as WebhookPOST } from '@/app/api/webhook/whatsapp/route';
 import { GET as PollGET } from '@/app/api/auth/poll-status/[token]/route';
-import { POST as LoginPOST } from '@/app/api/auth/passwordless-login/route';
 import crypto from 'crypto';
 import { adminDb } from '@/lib/firebaseAdmin';
 
 // Mock dependencies
-jest.mock('@/lib/firebaseAdmin', () => ({
+vi.mock('@/lib/firebaseAdmin', () => ({
   adminDb: {
-    collection: jest.fn(),
-    runTransaction: jest.fn(),
+    collection: vi.fn().mockReturnValue({
+      doc: vi.fn().mockReturnValue({
+        set: vi.fn(),
+        update: vi.fn(),
+        get: vi.fn()
+      }),
+      where: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({ empty: true })
+        }),
+        get: vi.fn().mockResolvedValue({ empty: true })
+      })
+    }),
+    runTransaction: vi.fn(),
   }
 }));
 
-jest.mock('@/lib/redis', () => ({
-  incr: jest.fn().mockResolvedValue(1),
-  expire: jest.fn().mockResolvedValue(1),
+vi.mock('@/lib/redis', () => ({
+  incr: vi.fn().mockResolvedValue(1),
+  expire: vi.fn().mockResolvedValue(1),
 }));
 
 describe('WhatsApp Webhook & Passwordless Login Security', () => {
   const WHATSAPP_APP_SECRET = 'test_secret';
   
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.WHATSAPP_APP_SECRET = WHATSAPP_APP_SECRET;
     process.env.APP_BASE_URL = 'https://hauhaucafe.vercel.app';
-    process.env.NODE_ENV = 'test';
   });
 
   const createWebhookRequest = (body: any, secretToUse?: string, omitHeader?: boolean, malformed?: boolean) => {
@@ -44,8 +55,8 @@ describe('WhatsApp Webhook & Passwordless Login Security', () => {
     }
     
     return {
-      text: jest.fn().mockResolvedValue(rawBody),
-      json: jest.fn().mockResolvedValue(body),
+      text: vi.fn().mockResolvedValue(rawBody),
+      json: vi.fn().mockResolvedValue(body),
       headers
     } as unknown as Request;
   };
@@ -100,9 +111,9 @@ describe('WhatsApp Webhook & Passwordless Login Security', () => {
     it('allows retry after transient processing failure', async () => {
       // Valid signature, mock transaction to return retry
       const req = createWebhookRequest({
-        entry: [{ changes: [{ value: { messages: [{ id: 'msg1', from: '919876543210', type: 'text', text: { body: 'test' } }] } }] }]
+        entry: [{ changes: [{ value: { metadata: { phone_number_id: '123' }, messages: [{ id: 'msg1', from: '919876543210', type: 'text', text: { body: 'test' } }] } }] }]
       });
-      (adminDb.runTransaction as jest.Mock).mockResolvedValueOnce({ status: 'retry' });
+      (adminDb!.runTransaction as any).mockResolvedValueOnce({ status: 'retry' });
       const res = await WebhookPOST(req);
       // Wait for process block to throw a mock error to confirm 500 retry is possible? 
       // Handled inside, we just check response
@@ -111,9 +122,9 @@ describe('WhatsApp Webhook & Passwordless Login Security', () => {
 
     it('returns 200 and ignores if already completed or processing', async () => {
       const req = createWebhookRequest({
-        entry: [{ changes: [{ value: { messages: [{ id: 'msg1', from: '919876543210' }] } }] }]
+        entry: [{ changes: [{ value: { metadata: { phone_number_id: '123' }, messages: [{ id: 'msg1', from: '919876543210' }] } }] }]
       });
-      (adminDb.runTransaction as jest.Mock).mockResolvedValueOnce({ status: 'completed' });
+      (adminDb!.runTransaction as any).mockResolvedValueOnce({ status: 'completed' });
       const res = await WebhookPOST(req);
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -130,7 +141,7 @@ describe('WhatsApp Webhook & Passwordless Login Security', () => {
 
     it('rejects expired token', async () => {
       const req = new Request('http://localhost/api/auth/poll-status/12345678901234567890123456789012');
-      (adminDb.runTransaction as jest.Mock).mockResolvedValueOnce({ success: false, error: 'Authentication failed.' });
+      (adminDb!.runTransaction as any).mockResolvedValueOnce({ success: false, error: 'Authentication failed.' });
       const res = await PollGET(req, { params: { token: '12345678901234567890123456789012' }});
       const data = await res.json();
       expect(data.is_phone_verified).toBe(false);
@@ -147,13 +158,14 @@ describe('WhatsApp Webhook & Passwordless Login Security', () => {
 
     it('sensitive account metadata is absent from successful poll response', async () => {
       const req = new Request('http://localhost/api/auth/poll-status/12345678901234567890123456789012');
-      (adminDb.runTransaction as jest.Mock).mockResolvedValueOnce({ success: true, data: { uid: 'user1' } });
+      (adminDb!.runTransaction as any).mockResolvedValueOnce({ success: true, data: { uid: 'user1' } });
       const res = await PollGET(req, { params: { token: '12345678901234567890123456789012' }});
       // The mock Firebase auth creates token, handled by another mock, but we can verify it doesn't crash
       expect(res.headers.get('Cache-Control')).toBe('no-store, max-age=0');
     });
 
     it('host-header poisoning cannot change generated URLs', async () => {
+      process.env.NODE_ENV = 'production';
       delete process.env.APP_BASE_URL;
       const req = createWebhookRequest({ entry: [] });
       req.headers.set('host', 'evil.com');

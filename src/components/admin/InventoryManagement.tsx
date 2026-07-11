@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { Plus, Sparkles, Send, AlertTriangle, CheckCircle, RefreshCw, Layers, Trash2, Settings, Play, Check, X,  Info } from 'lucide-react';
 import { sendAlertEmailAction } from '@/app/_actions/emailActions';
 import { StockItem, Outlet, ConversionRecipe, DoughBatch, MenuItem, Staff } from '@/lib/types';
-import { calculateHistoricalUsage, getOutletCoordinates, fetchConversionRecipes } from '@/lib/dbService';
+import { fetchStocks, fetchOutlets, calculateHistoricalUsage, getOutletCoordinates, fetchConversionRecipes, streamActiveBatches, streamBatchLogs, fetchMenuItems, fetchStaffList, addWastageRecord, fetchWastageList, fetchStockMovements } from '@/lib/dbService';
 import { getInventoryForecastAction } from '@/app/_actions/groqActions';
 import { secureSaveStockItem, secureSaveBulkStockItems, secureDeleteStockItem, secureSaveConversionRecipe, secureStartDoughBatch, secureCompleteDoughBatch } from '@/app/_actions/secureDbActions';
 import TOTPModal from '@/components/owner/TOTPModal';
 import { fetchLocalizedWeather, analyzeSmartRefill } from '@/lib/geminiService';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, query, collection, where, onSnapshot } from 'firebase/firestore';
+
 export default function InventoryManagement({ userRole }: { userRole?: string }) {
   const [stocks, setStocks] = useState<StockItem[]>([]);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
@@ -85,22 +87,16 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
       setCurrentUser(user);
       if (user) {
         try {
-          const token = await user.getIdToken();
-          const headers = { Authorization: `Bearer ${token}` };
-          const staffRes = await fetch(`/api/owner/staff/profile?uid=${user.uid}`, { headers });
-          const staffJson = await staffRes.json();
-          if (staffJson.success) {
-            const staffData = staffJson.staff;
+          const staffSnap = await getDoc(doc(db, 'staff', user.uid));
+          if (staffSnap.exists()) {
+            const staffData = staffSnap.data();
             const outletName = staffData.outlet;
             if (outletName) {
-              const outRes = await fetch('/api/owner/staff/outlets', { headers });
-              const outJson = await outRes.json();
-              if (outJson.success) {
-                const matchedOutlet = outJson.outlets.find((o: any) => o.name === outletName);
-                if (matchedOutlet) {
-                  setManagerOutletId(matchedOutlet.id);
-                  setSelectedOutletIdForBatches(matchedOutlet.id);
-                }
+              const outletData = await fetchOutlets();
+              const matchedOutlet = outletData.find(o => o.name === outletName);
+              if (matchedOutlet) {
+                setManagerOutletId(matchedOutlet.id);
+                setSelectedOutletIdForBatches(matchedOutlet.id);
               }
             }
           }
@@ -116,53 +112,24 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
   // Live listener for active batches and logs based on selected outlet
   useEffect(() => {
     if (!selectedOutletIdForBatches) return;
-    let isMounted = true;
     
-    const fetchBatches = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        const res = await fetch(`/api/owner/inventory/batches?outletId=${selectedOutletIdForBatches}`, { headers });
-        const data = await res.json();
-        
-        if (data.success && isMounted) {
-          setActiveBatches(data.activeBatches);
-          setBatchLogs(data.batchLogs);
-        }
-      } catch (e) {
-        console.error("Failed to fetch batches:", e);
-      }
-    };
-    
-    fetchBatches();
-    const interval = setInterval(fetchBatches, 30000); // 30s poll
-    
+    const unsubscribeActive = streamActiveBatches(selectedOutletIdForBatches, (batches) => {
+      setActiveBatches(batches);
+    });
+
+    const unsubscribeLogs = streamBatchLogs(selectedOutletIdForBatches, (logs) => {
+      setBatchLogs(logs);
+    });
+
     return () => {
-      isMounted = false;
-      clearInterval(interval);
+      unsubscribeActive();
+      unsubscribeLogs();
     };
   }, [selectedOutletIdForBatches]);
 
   // Load staff list on mount
   useEffect(() => {
-    const loadStaff = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        const res = await fetch('/api/owner/staff/list', { 
-          headers: { Authorization: `Bearer ${token}` } 
-        });
-        const data = await res.json();
-        if (data.success) setStaffList(data.staff);
-      } catch (err) {
-        console.error("Failed to load staff list:", err);
-      }
-    };
-    loadStaff();
+    fetchStaffList().then(list => setStaffList(list)).catch(err => console.error("Failed to load staff list:", err));
   }, []);
 
   // Live listener for recent orders (to calculate live sales count for active batches)
@@ -173,33 +140,21 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
     }
     
     const earliestStart = Math.min(...activeBatches.map(b => b.batch_start_time));
-    let isMounted = true;
     
-    const fetchOrders = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        const res = await fetch(`/api/owner/orders/recent?since=${earliestStart}`, { headers });
-        const data = await res.json();
-        
-        if (data.success && isMounted) {
-          setRecentOrders(data.orders);
-        }
-      } catch (e) {
-        console.error("Failed to fetch recent orders:", e);
-      }
-    };
+    const q = query(
+      collection(db, "orders"),
+      where("created_at", ">=", earliestStart)
+    );
     
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 30000); // 30s poll
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const orders: any[] = [];
+      snap.forEach(d => orders.push(d.data()));
+      setRecentOrders(orders);
+    }, (err) => {
+      console.error("Failed to stream recent orders for live batch sales count:", err);
+    });
     
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    return () => unsubscribe();
   }, [activeBatches]);
 
   const countWafflesSold = (batch: DoughBatch, linkedMenuItemId: string) => {
@@ -228,26 +183,25 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
     setLoading(true);
     setError(null);
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await user.getIdToken();
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const res = await fetch('/api/owner/inventory/bootstrap', { headers });
-      const data = await res.json();
+      const [stockData, outletData, recipesData, itemsData, wastageData, movementsData] = await Promise.all([
+        fetchStocks(),
+        fetchOutlets(),
+        fetchConversionRecipes(),
+        fetchMenuItems(),
+        fetchWastageList(),
+        fetchStockMovements()
+      ]);
       
-      if (!data.success) throw new Error(data.error);
-
-      setStocks(data.stocks);
-      setOutlets(data.outlets);
-      setConversionRecipes(data.recipes);
-      setMenuItems(data.menuItems);
-      setWastageList(data.wastage);
-      setStockMovementsList(data.movements);
+      setStocks(stockData);
+      setOutlets(outletData);
+      setConversionRecipes(recipesData);
+      setMenuItems(itemsData);
+      setWastageList(wastageData);
+      setStockMovementsList(movementsData);
 
       // If owner, default batches view to first outlet
-      if (userRole === 'owner' && data.outlets.length > 0 && !selectedOutletIdForBatches) {
-        setSelectedOutletIdForBatches(data.outlets[0].id);
+      if (userRole === 'owner' && outletData.length > 0 && !selectedOutletIdForBatches) {
+        setSelectedOutletIdForBatches(outletData[0].id);
       }
     } catch (err: any) {
       console.error("Failed to load stock raw materials registry:", err);
@@ -281,26 +235,14 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
       const qtyToReduce = parseFloat(wasteQty);
       const costVal = qtyToReduce * (item.cost_per_unit || 10);
 
-      const user = auth.currentUser;
-      if (user) {
-        const token = await user.getIdToken();
-        const headers = { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        };
-        await fetch('/api/owner/inventory/wastage', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            outlet: item.outlet_id ? (outlets.find(o => o.id === item.outlet_id)?.name || 'Central Store') : 'Central Store',
-            item_name: item.name,
-            quantity: qtyToReduce,
-            value: costVal,
-            reason: wasteReason,
-            staff_id: wasteStaffId
-          })
-        });
-      }
+      await addWastageRecord({
+        outlet: item.outlet_id ? (outlets.find(o => o.id === item.outlet_id)?.name || 'Central Store') : 'Central Store',
+        item_name: item.name,
+        quantity: qtyToReduce,
+        value: costVal,
+        reason: wasteReason,
+        staff_id: wasteStaffId
+      });
 
       // Deduct the quantity from stock
       await executeSecureAction('SESSION_BYPASS', {

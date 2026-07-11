@@ -173,7 +173,7 @@ describe('Auth Security Static Checks', () => {
     
     // Business events
     expect(content.includes('passwordless_login_consumed')).toBe(true);
-    expect(content.includes('passwordless_login_poll_failed')).toBe(true);
+    expect(content.includes('suspicious_activity_detected')).toBe(true);
     expect(content.includes('passwordless_login_consume_failed')).toBe(true);
     
     // Mask token

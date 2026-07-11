@@ -237,20 +237,6 @@ describe('Daily Closing API & Utilities', () => {
         })
       });
 
-      mockAdminDb.runTransaction.mockImplementation(async (cb) => {
-        const t = {
-          get: vi.fn().mockResolvedValue({
-            exists: true,
-            data: () => ({
-              status: 'submitted',
-              cash_reconciliation: { cash_difference: 0 }
-            })
-          }),
-          set: vi.fn()
-        };
-        await cb(t);
-      });
-
       const res = await reviewPOST(req);
       const data = await res.json();
       expect(data.success).toBe(false);

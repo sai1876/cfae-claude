@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     const fromPhone = message.from; // e.g. "919876543210"
     const normalizedFromPhone = fromPhone.replace(/[^0-9]/g, "");
     const messageId = message.id;
-    let dupRef;
+    let dupRef: admin.firestore.DocumentReference | undefined;
 
     if (messageId) {
       dupRef = adminDb.collection('processed_whatsapp_messages').doc(messageId);
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
 
         if (tokenMatch) {
           const token = tokenMatch[1].toUpperCase();
-          await processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token, messageId);
+          await processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token);
         } else {
           const usersRef = adminDb.collection('users');
           const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
