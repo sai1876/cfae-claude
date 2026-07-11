@@ -1,0 +1,159 @@
+/* @import "tw-animate-css"; */
+/* @import "shadcn/tailwind.css"; */
+@import "leaflet/dist/leaflet.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: #FAF7F2;
+    --background-rgb: 250, 247, 242;
+    --foreground: #111111;
+    --foreground-rgb: 17, 17, 17;
+    
+    --card: #FFFFFF;
+    --card-foreground: #111111;
+    
+    --popover: #FFFFFF;
+    --popover-foreground: #111111;
+    
+    --primary: #D99A32;
+    --primary-foreground: #FFFFFF;
+    
+    --secondary: #FFFFFF;
+    --secondary-foreground: #111111;
+    
+    --muted: #F5F5F5;
+    --muted-foreground: #777777;
+    
+    --accent: #FAF7F2;
+    --accent-foreground: #111111;
+    
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    
+    --border: #E8E0D6;
+    --input: #E8E0D6;
+    --ring: #D99A32;
+    
+    --radius: 1rem;
+
+    /* V2 specific */
+    --surface: #FFFFFF;
+    --surface-dim: #F5F5F5;
+    --surface-bright: #FFFFFF;
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-low: #FAFAFA;
+    --surface-container: #F5F5F5;
+    --surface-container-high: #EBEBEB;
+    --surface-container-highest: #E5E5E5;
+    
+    --on-surface: #111111;
+    --on-surface-variant: #737373;
+    
+    --outline: #A3A3A3;
+    --outline-variant: #E5E5E5;
+    
+    --earth: #FAFAFA;
+    --cream: #111111;
+    --gold: #D4AF37; /* Refined sharp gold */
+    --amber: #B87C24;
+    --bamboo: #10B981;
+    --water: #3B82F6;
+    --canopy: #F5F5F5;
+  }
+  
+
+  * {
+    @apply border-border;
+  }
+  html, body {
+    background: #0A0604;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Premium Custom Category Scrollbar Styles */
+.category-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(198, 139, 53, 0.35) rgba(44, 26, 16, 0.03);
+}
+
+.category-scroll-container::-webkit-scrollbar {
+  height: 5px; /* Thin premium sleek track */
+}
+
+.category-scroll-container::-webkit-scrollbar-track {
+  background: rgba(44, 26, 16, 0.02);
+  border-radius: 99px;
+  margin: 0 40px; /* Elegant margin insert */
+}
+
+.category-scroll-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(to right, rgba(198, 139, 53, 0.15), #C68B35, rgba(198, 139, 53, 0.15));
+  border-radius: 99px;
+  box-shadow: 0 0 10px rgba(198, 139, 53, 0.3);
+  transition: all 0.3s ease;
+}
+
+.category-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to right, rgba(198, 139, 53, 0.3), #E2A855, rgba(198, 139, 53, 0.3));
+  box-shadow: 0 0 15px rgba(198, 139, 53, 0.5);
+}
+
+/* Fix Leaflet map tiles broken by Tailwind's default img styling */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure Leaflet marker icons are visible and not constrained */
+.leaflet-marker-icon, .leaflet-marker-shadow {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Fix browser autofill injecting white backgrounds in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #FFFFFF inset !important;
+  -webkit-text-fill-color: #2C1A10 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Spinner animation for loading states */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

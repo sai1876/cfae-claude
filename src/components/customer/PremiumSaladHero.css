@@ -1,0 +1,93 @@
+.salad-orbit-path {
+    border: 2px dashed rgba(217, 230, 221, 0.5); /* secondary-container with opacity */
+    border-radius: 50%;
+    animation: spin-slow 120s linear infinite;
+}
+.salad-orbit-item {
+    animation: spin-slow-reverse 120s linear infinite;
+}
+.salad-float-leaf {
+    animation: salad-float 12s ease-in-out infinite;
+}
+.salad-float-leaf-1 { animation: salad-float 14s ease-in-out infinite 0s; }
+.salad-float-leaf-2 { animation: salad-float 12s ease-in-out infinite 1.5s; }
+.salad-float-leaf-3 { animation: salad-float 16s ease-in-out infinite 3s; }
+.salad-float-leaf-4 { animation: salad-float 15s ease-in-out infinite 4.5s; }
+.salad-float-leaf-5 { animation: salad-float 13s ease-in-out infinite 2s; }
+
+.salad-shimmer-btn {
+    position: relative;
+    overflow: hidden;
+}
+.salad-shimmer-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-20deg);
+}
+.salad-shimmer-btn:hover::after {
+    animation: salad-shimmer 1.5s infinite;
+}
+.salad-quadrant-image {
+    width: 200%;
+    height: 200%;
+    max-width: none;
+}
+.salad-quad-tl { transform: translate(0, 0); }
+.salad-quad-tr { transform: translate(-50%, 0); }
+.salad-quad-bl { transform: translate(0, -50%); }
+.salad-quad-br { transform: translate(-50%, -50%); }
+
+.salad-text-transition {
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+    opacity: 1;
+}
+.salad-text-transition-out {
+    transform: translateY(-15px);
+    opacity: 0;
+    transition: transform 0.6s ease-in, opacity 0.6s ease-in;
+}
+.salad-text-transition-start {
+    transform: translateY(20px);
+    opacity: 0;
+    transition: none;
+}
+
+.salad-bowl-anim {
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+}
+.salad-bowl-anim-out {
+    transform: rotate(10deg) scale(1.05);
+    opacity: 0;
+    transition: transform 0.6s ease-in, opacity 0.6s ease-in;
+}
+.salad-bowl-anim-start {
+    transform: rotate(-10deg) scale(0.95);
+    opacity: 0;
+    transition: none;
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes spin-slow-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+@keyframes salad-float {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(8deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+@keyframes salad-shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}

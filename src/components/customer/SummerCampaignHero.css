@@ -1,0 +1,280 @@
+.summer-hero-container {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px 20px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+  margin-top: 0px;
+  /* FORCE VIBRANT YELLOW BACKGROUND TO MATCH MOCKUP EXACTLY */
+  background: radial-gradient(circle at top center, #FFE259 0%, #FFA751 100%);
+  border-radius: 24px;
+  box-shadow: 0 0 40px rgba(255, 167, 81, 0.4);
+}
+
+/* Background glowing orbs to mimic the vibrant sun rays */
+.summer-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+  top: -50px;
+  left: -50px;
+}
+
+.orb-2 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 180, 50, 0.4) 0%, transparent 70%);
+  bottom: 100px;
+  right: -50px;
+}
+
+/* Header Text matches Image 2 */
+.summer-hero-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.summer-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #3b200b; /* Dark brown for high contrast on yellow */
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.summer-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-style: italic;
+  color: #3b200b;
+  margin: 2px 0 6px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.summer-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5c3b1e;
+  margin: 0;
+}
+
+/* HORIZONTAL SLIDER */
+.summer-horizontal-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  width: 100vw;
+  margin-left: -16px; /* Negate container padding */
+  padding: 10px 16px;
+  gap: 16px;
+  margin-bottom: 12px;
+  scrollbar-width: none; /* Hide scrollbar */
+}
+.summer-horizontal-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.summer-side-card {
+  flex: 0 0 160px;
+  scroll-snap-align: center;
+  background: linear-gradient(135deg, rgba(160, 100, 20, 0.4) 0%, rgba(90, 50, 10, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 16px 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 220px;
+}
+
+.side-card-tag {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.side-card-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: #fff;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.side-card-img-wrap {
+  position: absolute;
+  bottom: -15px;
+  right: -15px;
+  width: 140px;
+  height: 140px;
+}
+
+.side-img {
+  object-fit: cover;
+  border-radius: 50%;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
+}
+
+/* The Central Glassmorphism Box for the 3 drinks */
+.summer-glass-box {
+  flex: 0 0 90%;
+  scroll-snap-align: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 16px 12px 24px;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  height: auto;
+  align-self: center;
+}
+
+.glass-box-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  margin: 0 0 20px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.glass-box-drinks {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  width: 100%;
+  gap: 8px;
+}
+
+.drink-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+  flex: 1;
+}
+
+.drink-item:hover {
+  transform: translateY(-5px);
+}
+
+.drink-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.65; /* Tall for drinks */
+  margin-bottom: 12px;
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4));
+  /* Ensure the background removal trick works perfectly */
+  mix-blend-mode: screen;
+}
+
+.drink-img {
+  object-fit: contain;
+}
+
+/* The dark capsule label under each drink */
+.drink-label {
+  background: #2a1b12; /* Very dark espresso brown */
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-align: center;
+  width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.summer-active-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: #5c3b1e;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+/* 4 Categories Grid */
+.summer-categories-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.summer-cat-card {
+  flex: 1;
+  background: rgba(255, 235, 180, 0.4);
+  border-radius: 12px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(180, 100, 0, 0.1);
+  backdrop-filter: blur(4px);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.summer-cat-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 235, 180, 0.6);
+}
+
+.summer-cat-card h4 {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #4a2b15;
+  margin: 0 0 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.summer-cat-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.cat-img {
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+}
