@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { Plus, Sparkles, Send, AlertTriangle, CheckCircle, RefreshCw, Layers, Trash2, Settings, Play, Check, X,  Info } from 'lucide-react';
 import { sendAlertEmailAction } from '@/app/_actions/emailActions';
 import { StockItem, Outlet, ConversionRecipe, DoughBatch, MenuItem, Staff } from '@/lib/types';
+import { getInventoryForecastAction } from '@/app/_actions/groqActions';
+import { secureSaveStockItem, secureSaveBulkStockItems, secureDeleteStockItem, secureSaveConversionRecipe, secureStartDoughBatch, secureCompleteDoughBatch } from '@/app/_actions/secureDbActions';
+import TOTPModal from './TOTPModal';
+import { fetchLocalizedWeather, analyzeSmartRefill } from '@/lib/geminiService';
+import { calculateHistoricalUsage, getOutletCoordinates, fetchConversionRecipes } from '@/lib/dbService';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
@@ -83,13 +88,13 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
         try {
           const token = await user.getIdToken();
           const headers = { Authorization: `Bearer ${token}` };
-          const staffRes = await fetch(`/api/admin/staff/profile?uid=${user.uid}`, { headers });
+          const staffRes = await fetch(`/api/owner/staff/profile?uid=${user.uid}`, { headers });
           const staffJson = await staffRes.json();
           if (staffJson.success) {
             const staffData = staffJson.staff;
             const outletName = staffData.outlet;
             if (outletName) {
-              const outRes = await fetch('/api/admin/staff/outlets', { headers });
+              const outRes = await fetch('/api/owner/staff/outlets', { headers });
               const outJson = await outRes.json();
               if (outJson.success) {
                 const matchedOutlet = outJson.outlets.find((o: any) => o.name === outletName);
@@ -121,7 +126,7 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
         const token = await user.getIdToken();
         const headers = { Authorization: `Bearer ${token}` };
         
-        const res = await fetch(`/api/admin/inventory/batches?outletId=${selectedOutletIdForBatches}`, { headers });
+        const res = await fetch(`/api/owner/inventory/batches?outletId=${selectedOutletIdForBatches}`, { headers });
         const data = await res.json();
         
         if (data.success && isMounted) {
@@ -149,7 +154,7 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
         const user = auth.currentUser;
         if (!user) return;
         const token = await user.getIdToken();
-        const res = await fetch('/api/admin/staff/list', { 
+        const res = await fetch('/api/owner/staff/list', { 
           headers: { Authorization: `Bearer ${token}` } 
         });
         const data = await res.json();
@@ -178,7 +183,7 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
         const token = await user.getIdToken();
         const headers = { Authorization: `Bearer ${token}` };
         
-        const res = await fetch(`/api/admin/orders/recent?since=${earliestStart}`, { headers });
+        const res = await fetch(`/api/owner/orders/recent?since=${earliestStart}`, { headers });
         const data = await res.json();
         
         if (data.success && isMounted) {
@@ -229,7 +234,7 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
       const token = await user.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
 
-      const res = await fetch('/api/admin/inventory/bootstrap', { headers });
+      const res = await fetch('/api/owner/inventory/bootstrap', { headers });
       const data = await res.json();
       
       if (!data.success) throw new Error(data.error);
@@ -284,7 +289,7 @@ export default function InventoryManagement({ userRole }: { userRole?: string })
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}` 
         };
-        await fetch('/api/admin/inventory/wastage', {
+        await fetch('/api/owner/inventory/wastage', {
           method: 'POST',
           headers,
           body: JSON.stringify({

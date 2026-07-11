@@ -22,19 +22,19 @@ import { signOut } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 // Import our premium modular panels
-import DashboardStats from '@/components/admin/DashboardStats';
-import MenuManagement from '@/components/admin/MenuManagement';
-import InventoryManagement from '@/components/admin/InventoryManagement';
-import StaffManagement from '@/components/admin/StaffManagement';
-import OutletManagement from '@/components/admin/OutletManagement';
-import OrderHistory from '@/components/admin/OrderHistory';
-import OrderManagement from '@/components/admin/OrderManagement';
-import RiderDispatch from '@/components/admin/RiderDispatch';
-import StaffCopilot from '@/components/admin/StaffCopilot';
-import ScheduleDashboard from '@/components/admin/ScheduleDashboard';
-import RefundManagement from '@/components/admin/RefundManagement';
-import WastageManagement from '@/components/admin/WastageManagement';
-import DailyClosingManagement from '@/components/admin/DailyClosingManagement';
+import DashboardStats from '@/components/owner/DashboardStats';
+import MenuManagement from '@/components/owner/MenuManagement';
+import InventoryManagement from '@/components/owner/InventoryManagement';
+import StaffManagement from '@/components/owner/StaffManagement';
+import OutletManagement from '@/components/owner/OutletManagement';
+import OrderHistory from '@/components/owner/OrderHistory';
+import OrderManagement from '@/components/owner/OrderManagement';
+import RiderDispatch from '@/components/owner/RiderDispatch';
+import StaffCopilot from '@/components/owner/StaffCopilot';
+import ScheduleDashboard from '@/components/owner/ScheduleDashboard';
+import RefundManagement from '@/components/owner/RefundManagement';
+import WastageManagement from '@/components/owner/WastageManagement';
+import DailyClosingManagement from '@/components/owner/DailyClosingManagement';
 
 type TabType = 'dashboard' | 'active_orders' | 'orders' | 'dispatch' | 'menu' | 'inventory' | 'staff' | 'outlets' | 'schedule' | 'refunds' | 'wastage' | 'daily_closings';
 

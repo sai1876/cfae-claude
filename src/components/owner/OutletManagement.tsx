@@ -16,7 +16,7 @@ interface HUDItem {
 
 import dynamic from 'next/dynamic';
 
-const LocationPickerMap = dynamic(() => import('@/components/admin/LocationPickerMap'), { ssr: false });
+const LocationPickerMap = dynamic(() => import('@/components/owner/LocationPickerMap'), { ssr: false });
 
 export default function OutletManagement({ userRole = 'admin' }: { userRole?: 'admin' | 'owner' | 'manager' }) {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
@@ -69,7 +69,7 @@ export default function OutletManagement({ userRole = 'admin' }: { userRole?: 'a
   const fetchAIInsights = async () => {
     setLoadingHud(true);
     try {
-      const res = await fetch('/api/admin/morning-hud');
+      const res = await fetch('/api/owner/morning-hud');
       const data = await res.json();
       if (data.tasks) {
         setHudItems(data.tasks);

@@ -6,7 +6,7 @@ import { Clock, CheckCircle, Flame,  Utensils, Coffee, AlertTriangle } from 'luc
 import { db, auth } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { OrderDocument, OrderItem } from '@/lib/types';
-import StaffCopilot from '@/components/admin/StaffCopilot';
+import StaffCopilot from '@/components/owner/StaffCopilot';
 import KDSProfileModal from '@/components/kds/KDSProfileModal';
 import { User } from 'lucide-react';
 

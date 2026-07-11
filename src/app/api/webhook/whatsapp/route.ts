@@ -12,6 +12,7 @@ import * as admin from 'firebase-admin';
 import crypto from 'crypto';
 import { maskPhone } from '@/lib/security/maskPii';
 import { logBusinessEvent } from '@/server/events/logBusinessEvent';
+import { getServerBaseUrl } from '@/lib/security/serverConfig';
 
 // Verify token from environment or fallback
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
@@ -86,16 +87,62 @@ export async function GET(request: Request) {
  * POST - Handle Inbound WhatsApp Webhook Payloads
  */
 export async function POST(request: Request) {
+  const secureHeaders = {
+    'Cache-Control': 'no-store, max-age=0',
+    'Pragma': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  };
+
   try {
     if (!adminDb) {
       console.error('[WHATSAPP WEBHOOK] Firebase Admin DB not initialized.');
-      return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 500, headers: secureHeaders });
     }
 
-    const payload = await request.json();
+    const rawBody = await request.text();
+    const signatureHeader = request.headers.get('x-hub-signature-256');
+    const secret = process.env.WHATSAPP_APP_SECRET;
 
-    const host = request.headers.get('host') || 'hauhaucafe.vercel.app';
-    const baseUrl = `https://${host}`;
+    if (!secret) {
+      console.error('[WHATSAPP WEBHOOK] WHATSAPP_APP_SECRET is not configured.');
+      return new NextResponse('Internal Server Error', { status: 500, headers: secureHeaders });
+    }
+    
+    if (!signatureHeader || !signatureHeader.startsWith('sha256=')) {
+      console.warn('[WHATSAPP WEBHOOK] Missing or malformed signature header.');
+      return new NextResponse('Forbidden', { status: 403, headers: secureHeaders });
+    }
+    
+    const signatureHex = signatureHeader.substring(7);
+    if (!/^[a-fA-F0-9]{64}$/.test(signatureHex)) {
+      console.warn('[WHATSAPP WEBHOOK] Invalid signature length/format.');
+      return new NextResponse('Forbidden', { status: 403, headers: secureHeaders });
+    }
+
+    const expectedSignature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'ascii');
+    const actualBuffer = Buffer.from(signatureHex, 'ascii');
+
+    if (expectedBuffer.length !== actualBuffer.length || !crypto.timingSafeEqual(expectedBuffer, actualBuffer)) {
+      console.warn('[WHATSAPP WEBHOOK] Signature verification failed.');
+      return new NextResponse('Forbidden', { status: 403, headers: secureHeaders });
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (err) {
+      console.warn('[WHATSAPP WEBHOOK] Invalid JSON payload.');
+      return new NextResponse('Bad Request', { status: 400, headers: secureHeaders });
+    }
+
+    let baseUrl: string;
+    try {
+      baseUrl = getServerBaseUrl();
+    } catch (err: any) {
+      console.error('[WHATSAPP WEBHOOK] Server config error:', err.message);
+      return new NextResponse('Internal Server Error', { status: 500, headers: secureHeaders });
+    }
 
     const entry = payload.entry?.[0];
     const change = entry?.changes?.[0];
@@ -104,6 +151,10 @@ export async function POST(request: Request) {
     const metadata = value?.metadata;
     const phoneNumberId = metadata?.phone_number_id;
 
+    if (!message || !phoneNumberId) {
+      return NextResponse.json({ success: true, message: 'Status or echo ignored' }, { headers: secureHeaders });
+    }
+
     const safeLog = {
       event_type: message?.type || 'unknown',
       message_id: message?.id,
@@ -111,130 +162,124 @@ export async function POST(request: Request) {
     };
     console.log('[WHATSAPP WEBHOOK] Webhook payload received (safe):', JSON.stringify(safeLog));
 
-    if (!message || !phoneNumberId) {
-      return NextResponse.json({ success: true, message: 'Status or echo ignored' });
-    }
-
     const fromPhone = message.from; // e.g. "919876543210"
     const normalizedFromPhone = fromPhone.replace(/[^0-9]/g, "");
-
     const messageId = message.id;
+    let dupRef;
+
     if (messageId) {
-      const dupRef = adminDb.collection('processed_whatsapp_messages').doc(messageId);
-      const dupSnap = await dupRef.get();
-      if (dupSnap.exists) {
-        console.log(`[WHATSAPP WEBHOOK] Message ID ${messageId} already processed. Ignoring.`);
-        return NextResponse.json({ success: true, message: 'Duplicate message ignored' });
-      }
-      await dupRef.set({
-        processed_at: admin.firestore.FieldValue.serverTimestamp(),
-        from: maskPhone(fromPhone)
-      });
-    }
+      dupRef = adminDb.collection('processed_whatsapp_messages').doc(messageId);
+      try {
+        const dupResult = await adminDb.runTransaction(async (t) => {
+          const snap = await t.get(dupRef!);
+          if (snap.exists) {
+            const data = snap.data();
+            if (data?.status === 'completed') return { status: 'completed' };
+            if (data?.status === 'processing') return { status: 'processing' };
+            t.update(dupRef!, { status: 'processing', updated_at: admin.firestore.FieldValue.serverTimestamp() });
+            return { status: 'retry' };
+          }
+          t.create(dupRef!, {
+            status: 'processing',
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            from: maskPhone(fromPhone)
+          });
+          return { status: 'new' };
+        });
 
-    // ----------------------------------------------------
-    // CASE 1: Voice Note Order Payload (.ogg audio)
-    // ----------------------------------------------------
-    if (message.type === 'audio' && message.audio) {
-      const mediaId = message.audio.id;
-      console.log(`[WHATSAPP WEBHOOK] Voice message received from ${maskPhone(fromPhone)}, media ID: ${mediaId}`);
-
-      // --- Gate A: Phone Authentication Lookup (FAST CHECK) ---
-      const usersRef = adminDb.collection('users');
-      const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
-
-      if (!userDoc) {
-        console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${maskPhone(fromPhone)} not registered.`);
-        await sendWhatsAppMessage(
-          phoneNumberId,
-          fromPhone,
-          "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸"
-        );
-        return NextResponse.json({ success: true, message: 'Unregistered user aborted' });
-      }
-
-      const userData = userDoc.data();
-      const accountStatus = userData?.account_status || userData?.status || '';
-      if (accountStatus.toLowerCase() !== 'active') {
-        console.warn(`[WHATSAPP WEBHOOK REJECT] User status is ${accountStatus}.`);
-        await sendWhatsAppMessage(
-          phoneNumberId,
-          fromPhone,
-          "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸"
-        );
-        return NextResponse.json({ success: true, message: 'Inactive user aborted' });
-      }
-
-      // Process voice order
-      await processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId, baseUrl)
-        .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Background processing failed:', err));
-
-      console.log(`[WHATSAPP WEBHOOK] Voice order processed.`);
-      
-      await logBusinessEvent({
-        event_type: 'whatsapp_voice_order_received',
-        actor_type: 'webhook',
-        actor_id: userDoc.id || 'unknown',
-        target_type: 'user',
-        target_id: userDoc.id || 'unknown',
-        severity: 'info',
-        source: 'webhook',
-        metadata: {
-          mediaId
+        if (dupResult.status === 'completed' || dupResult.status === 'processing') {
+          console.log(`[WHATSAPP WEBHOOK] Message ID ${messageId} already processed or processing. Ignoring.`);
+          return NextResponse.json({ success: true, message: 'Duplicate message ignored' }, { headers: secureHeaders });
         }
-      });
-
-      return NextResponse.json({ success: true, message: 'Voice order processed' });
+      } catch (err: any) {
+        if (err.code === 6) { // ALREADY_EXISTS
+          console.log(`[WHATSAPP WEBHOOK] Message ID ${messageId} concurrent creation. Ignoring.`);
+          return NextResponse.json({ success: true, message: 'Duplicate message ignored' }, { headers: secureHeaders });
+        }
+        console.error('[WHATSAPP WEBHOOK] Duplicate check error:', err);
+        return new NextResponse('Internal Server Error', { status: 500, headers: secureHeaders });
+      }
     }
 
-    // ----------------------------------------------------
-    // CASE 2: Text Verification Code Message Payload (Signup Handshake)
-    // ----------------------------------------------------
-    if (message.type === 'text' && message.text?.body) {
-      const messageText = message.text.body;
-      const tokenMatch = messageText.match(/(?:LOGIN\s+)?Ref:\s*([A-F0-9]{32})\s*$/i) || messageText.match(/Ref:\s*([A-Z0-9]{8})\s*$/i);
+    try {
+      // CASE 1: Voice Note Order Payload (.ogg audio)
+      if (message.type === 'audio' && message.audio) {
+        const mediaId = message.audio.id;
+        const usersRef = adminDb.collection('users');
+        const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
 
-      if (tokenMatch) {
-        const token = tokenMatch[1].toUpperCase();
+        if (!userDoc || (userDoc.data()?.account_status?.toLowerCase() !== 'active' && userDoc.data()?.status?.toLowerCase() !== 'active')) {
+          await sendWhatsAppMessage(phoneNumberId, fromPhone, "Macha! You don't have an active account with Hau Hau yet! 🌟");
+          if (dupRef) await dupRef.update({ status: 'completed' });
+          return NextResponse.json({ success: true, message: 'Inactive user aborted' }, { headers: secureHeaders });
+        }
+
+        await processVoiceOrderInBackground(phoneNumberId, fromPhone, normalizedFromPhone, mediaId, baseUrl);
         
-        // Process text handshake
-        await processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token)
-          .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Handshake processing failed:', err));
+        await logBusinessEvent({
+          event_type: 'whatsapp_voice_order_received',
+          actor_type: 'webhook',
+          actor_id: userDoc.id || 'unknown',
+          target_type: 'user',
+          target_id: userDoc.id || 'unknown',
+          severity: 'info',
+          source: 'webhook',
+          metadata: { mediaId }
+        });
+      }
+      // CASE 2: Text Verification Code Message Payload (Signup Handshake)
+      else if (message.type === 'text' && message.text?.body) {
+        const messageText = message.text.body;
+        // Strict 32 hex char token match for passwordless login
+        const tokenMatch = messageText.match(/(?:LOGINs+)?Ref:s*([A-F0-9]{32})s*$/i);
 
-        return NextResponse.json({ success: true, message: 'Handshake completed' });
-      } else {
-        // --- Gate A: Phone Authentication Lookup for general chat ---
+        if (tokenMatch) {
+          const token = tokenMatch[1].toUpperCase();
+          await processTextHandshakeInBackground(phoneNumberId, fromPhone, normalizedFromPhone, token, messageId);
+        } else {
+          const usersRef = adminDb.collection('users');
+          const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
+          
+          if (!userDoc || (userDoc.data()?.account_status?.toLowerCase() !== 'active' && userDoc.data()?.status?.toLowerCase() !== 'active')) {
+            await sendWhatsAppMessage(phoneNumberId, fromPhone, "Macha! You don't have an active account with Hau Hau yet! 🌟");
+            if (dupRef) await dupRef.update({ status: 'completed' });
+            return NextResponse.json({ success: true, message: 'Inactive user aborted' }, { headers: secureHeaders });
+          }
+
+          await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userDoc.data(), userDoc.id, baseUrl);
+          
+          await logBusinessEvent({
+            event_type: 'whatsapp_message_received',
+            actor_type: 'webhook',
+            actor_id: userDoc.id || 'unknown',
+            target_type: 'user',
+            target_id: userDoc.id || 'unknown',
+            severity: 'info',
+            source: 'webhook'
+          });
+        }
+      }
+      // CASE 3: Location Message Payload (Sharing Live Location)
+      else if (message.type === 'location' && message.location) {
+        const loc = message.location;
+        const lat = loc.latitude;
+        const lng = loc.longitude;
         const usersRef = adminDb.collection('users');
         const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
 
         if (!userDoc) {
-          console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${maskPhone(fromPhone)} not registered.`);
-          await sendWhatsAppMessage(
-            phoneNumberId,
-            fromPhone,
-            "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸"
-          );
-          return NextResponse.json({ success: true, message: 'Unregistered user aborted' });
+          await sendWhatsAppMessage(phoneNumberId, fromPhone, "Macha! You don't have an account registered with Hau Hau yet! 🌟");
+          if (dupRef) await dupRef.update({ status: 'completed' });
+          return NextResponse.json({ success: true, message: 'Unregistered user aborted' }, { headers: secureHeaders });
         }
 
-        const userData = userDoc.data();
-        const accountStatus = userData?.account_status || userData?.status || '';
-        if (accountStatus.toLowerCase() !== 'active') {
-          console.warn(`[WHATSAPP WEBHOOK REJECT] User status is ${accountStatus}.`);
-          await sendWhatsAppMessage(
-            phoneNumberId,
-            fromPhone,
-            "Macha! Your account is not active yet. Please verify your email first! ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸"
-          );
-          return NextResponse.json({ success: true, message: 'Inactive user aborted' });
-        }
-
-        // Process chat message
-        await processGeneralChatInBackground(phoneNumberId, fromPhone, normalizedFromPhone, messageText, userData, userDoc.id, baseUrl)
-          .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] General chat processing failed:', err));
-
+        await userDoc.ref.update({
+          live_location: { lat, lng, updated_at: Date.now() }
+        });
+        await processLocationMessageInBackground(phoneNumberId, fromPhone, normalizedFromPhone, lat, lng);
+        
         await logBusinessEvent({
-          event_type: 'whatsapp_message_received',
+          event_type: 'whatsapp_location_received',
           actor_type: 'webhook',
           actor_id: userDoc.id || 'unknown',
           target_type: 'user',
@@ -242,70 +287,32 @@ export async function POST(request: Request) {
           severity: 'info',
           source: 'webhook'
         });
-
-        return NextResponse.json({ success: true, message: 'Chat message processed' });
-      }
-    }
-
-    // ----------------------------------------------------
-    // CASE 3: Location Message Payload (Sharing Live Location)
-    // ----------------------------------------------------
-    if (message.type === 'location' && message.location) {
-      const loc = message.location;
-      const lat = loc.latitude;
-      const lng = loc.longitude;
-      console.log(`[WHATSAPP WEBHOOK] Location received from ${maskPhone(fromPhone)}`);
-
-      // --- Gate A: Phone Authentication Lookup ---
-      const usersRef = adminDb.collection('users');
-      const userDoc = await findUserByPhone(usersRef, normalizedFromPhone);
-
-      if (!userDoc) {
-        console.warn(`[WHATSAPP WEBHOOK REJECT] Phone ${maskPhone(fromPhone)} not registered.`);
-        await sendWhatsAppMessage(
-          phoneNumberId,
-          fromPhone,
-          "Macha! You don't have an account registered with Hau Hau yet. Please open our web app and verify your profile first! ÃƒÂ°Ã…Â¸Ã…â€™Ã…Â¸"
-        );
-        return NextResponse.json({ success: true, message: 'Unregistered user aborted' });
       }
 
-      // Update user's live_location in Firestore
-      const userRef = userDoc.ref;
-      await userRef.update({
-        live_location: {
-          lat: lat,
-          lng: lng,
-          updated_at: Date.now()
-        }
-      });
-      console.log(`[WHATSAPP WEBHOOK] Updated live_location for user: ${userDoc.id}`);
+      if (dupRef) {
+        await dupRef.update({ 
+          status: 'completed', 
+          completed_at: admin.firestore.FieldValue.serverTimestamp() 
+        });
+      }
+      return NextResponse.json({ success: true, message: 'Processed' }, { headers: secureHeaders });
 
-      // Process location
-      await processLocationMessageInBackground(phoneNumberId, fromPhone, normalizedFromPhone, lat, lng)
-        .catch(err => console.error('[WHATSAPP WEBHOOK ASYNC ERROR] Location processing failed:', err));
-
-      await logBusinessEvent({
-        event_type: 'whatsapp_location_received',
-        actor_type: 'webhook',
-        actor_id: userDoc.id || 'unknown',
-        target_type: 'user',
-        target_id: userDoc.id || 'unknown',
-        severity: 'info',
-        source: 'webhook'
-      });
-
-      return NextResponse.json({ success: true, message: 'Location processed' });
+    } catch (processingErr) {
+      console.error('[WHATSAPP WEBHOOK ERROR] Processing failed:', processingErr);
+      if (dupRef) {
+        await dupRef.update({ 
+          status: 'failed', 
+          updated_at: admin.firestore.FieldValue.serverTimestamp() 
+        });
+      }
+      return new NextResponse('Internal Server Error', { status: 500, headers: secureHeaders });
     }
-
-    return NextResponse.json({ success: true, message: 'Unhandled webhook event' });
 
   } catch (error: any) {
     console.error('[WHATSAPP WEBHOOK ERROR] Webhook POST router failed:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500, headers: secureHeaders });
   }
 }
-
 /**
  * Background Asynchronous Pipeline: downloads media, transcribes, parses catalog, stages order, sends link.
  */

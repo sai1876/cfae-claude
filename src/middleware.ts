@@ -14,5 +14,5 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // Protect all secure routes
-  matcher: ['/admin/:path*', '/admin', '/manager/:path*', '/manager', '/kds/:path*', '/kds', '/delivery/:path*', '/delivery'],
+  matcher: ['/admin/:path*', '/owner', '/manager/:path*', '/manager', '/kds/:path*', '/kds', '/delivery/:path*', '/delivery'],
 };

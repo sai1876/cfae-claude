@@ -176,7 +176,7 @@ describe('Static Security Checks', () => {
       const orderCreate = fs.readFileSync(path.join(process.cwd(), 'src/app/api/orders/create/route.ts'), 'utf8');
       expect(orderCreate).toContain("event_type: 'order_created'");
 
-      const deleteUser = fs.readFileSync(path.join(process.cwd(), 'src/app/api/admin/delete-user/route.ts'), 'utf8');
+      const deleteUser = fs.readFileSync(path.join(process.cwd(), 'src/app/api/owner/delete-user/route.ts'), 'utf8');
       expect(deleteUser).toContain("event_type: 'admin_user_deleted'");
 
       const webhook = fs.readFileSync(path.join(process.cwd(), 'src/app/api/webhook/whatsapp/route.ts'), 'utf8');

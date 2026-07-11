@@ -83,10 +83,10 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
 
       const todayStr = new Date().toISOString().slice(0, 10);
       const [outletsRes, staffRes, attendanceRes, shiftsRes] = await Promise.all([
-        fetch('/api/admin/staff/outlets', { headers }),
-        fetch('/api/admin/staff/list', { headers }),
-        fetch(`/api/admin/staff/attendance?date=${todayStr}`, { headers }),
-        fetch(`/api/admin/staff/shifts?date=${todayStr}`, { headers })
+        fetch('/api/owner/staff/outlets', { headers }),
+        fetch('/api/owner/staff/list', { headers }),
+        fetch(`/api/owner/staff/attendance?date=${todayStr}`, { headers }),
+        fetch(`/api/owner/staff/shifts?date=${todayStr}`, { headers })
       ]);
       
       const outletsData = await outletsRes.json();
@@ -162,7 +162,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
           const user = auth.currentUser;
           const token = user ? await user.getIdToken() : '';
           
-          await fetch('/api/admin/approvals/submit', {
+          await fetch('/api/owner/approvals/submit', {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
         const user = auth.currentUser;
         const token = user ? await user.getIdToken() : '';
 
-        await fetch('/api/admin/approvals/submit', {
+        await fetch('/api/owner/approvals/submit', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -419,7 +419,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
     try {
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : '';
-      await fetch('/api/admin/staff/attendance', {
+      await fetch('/api/owner/staff/attendance', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -443,7 +443,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
     try {
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : '';
-      await fetch('/api/admin/staff/attendance', {
+      await fetch('/api/owner/staff/attendance', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -467,7 +467,7 @@ export default function StaffManagement({ userRole }: { userRole?: string }) {
     try {
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : '';
-      await fetch('/api/admin/staff/shifts', {
+      await fetch('/api/owner/staff/shifts', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

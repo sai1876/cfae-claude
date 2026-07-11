@@ -294,7 +294,7 @@ function LoginContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
       
-      window.location.href = data.redirectUrl || '/admin';
+      window.location.href = data.redirectUrl || '/owner';
     } catch (err: any) {
       setAuthError(getFriendlyErrorMessage(err));
     } finally {

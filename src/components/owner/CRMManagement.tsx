@@ -50,8 +50,8 @@ export default function CRMManagement({ initialFilter = 'all' }: { initialFilter
       const headers = { Authorization: `Bearer ${token}` };
 
       const [revRes, tixRes] = await Promise.all([
-        fetch('/api/admin/crm/reviews/list', { headers }),
-        fetch('/api/admin/crm/complaints/list', { headers })
+        fetch('/api/owner/crm/reviews/list', { headers }),
+        fetch('/api/owner/crm/complaints/list', { headers })
       ]);
       
       const revData = await revRes.json();
@@ -77,7 +77,7 @@ export default function CRMManagement({ initialFilter = 'all' }: { initialFilter
       if (!user) return;
       const token = await user.getIdToken();
       
-      const res = await fetch('/api/admin/crm/complaints/resolve', {
+      const res = await fetch('/api/owner/crm/complaints/resolve', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

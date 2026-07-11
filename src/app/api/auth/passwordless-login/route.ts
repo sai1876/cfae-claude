@@ -1,6 +1,6 @@
 // [PUBLIC] - Passwordless login initiation
 import { NextResponse } from 'next/server';
-import { rateLimit } from '@/lib/rateLimit';
+import { distributedRateLimit } from '@/lib/security/distributedRateLimit';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -32,13 +32,19 @@ function getPhoneVariations(phone: string): string[] {
 }
 
 export async function POST(req: Request) {
+  const secureHeaders = {
+    'Cache-Control': 'no-store, max-age=0',
+    'Pragma': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  };
+
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const body = await req.json();
     const result = passwordlessSchema.safeParse(body);
     
     if (!result.success) {
-      return NextResponse.json({ success: false, detail: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json({ success: false, detail: "Invalid credentials" }, { status: 401, headers: secureHeaders });
     }
 
     const { phone } = result.data;
@@ -54,19 +60,19 @@ export async function POST(req: Request) {
 
     // Rate Limit
     const rlKey = phoneHash || crypto.createHash('sha256').update(phone).digest('hex');
-    const phoneRl = rateLimit(`pwl_phone_${rlKey}`, 3, 15 * 60 * 1000); // 3 per 15 mins
+    const phoneRl = await distributedRateLimit('pwl_phone', rlKey, 3, 15 * 60 * 1000); // 3 per 15 mins
     if (!phoneRl.success) {
-      return NextResponse.json({ success: false, detail: "Too many requests" }, { status: 429 });
+      return NextResponse.json({ success: false, detail: "Too many requests" }, { status: 429, headers: secureHeaders });
     }
 
-    const ipRl = rateLimit(`pwl_ip_${ip}`, 10, 15 * 60 * 1000); // 10 per 15 mins
+    const ipRl = await distributedRateLimit('pwl_ip', ip, 10, 15 * 60 * 1000); // 10 per 15 mins
     if (!ipRl.success) {
-      return NextResponse.json({ success: false, detail: "Too many requests" }, { status: 429 });
+      return NextResponse.json({ success: false, detail: "Too many requests" }, { status: 429, headers: secureHeaders });
     }
 
     // 1. Lookup user in Firestore
     if (!adminDb) {
-      return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500 });
+      return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500, headers: secureHeaders });
     }
     const usersRef = adminDb.collection('users');
     let userDoc: admin.firestore.DocumentSnapshot | null = null;
@@ -92,7 +98,7 @@ export async function POST(req: Request) {
         source: 'api',
         metadata: { masked_phone: maskedPhone, reason: "user_not_found" }
       });
-      return NextResponse.json({ success: false, detail: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json({ success: false, detail: "Invalid credentials" }, { status: 401, headers: secureHeaders });
     }
 
     const userData = userDoc.data();
@@ -110,7 +116,7 @@ export async function POST(req: Request) {
         source: 'api',
         metadata: { masked_phone: maskedPhone, reason: "account_inactive" }
       });
-      return NextResponse.json({ success: false, detail: "Account inactive", lockout: true }, { status: 403 });
+      return NextResponse.json({ success: false, detail: "Invalid credentials" }, { status: 401, headers: secureHeaders });
     }
 
     // 2. Generate 32-character hex token (128-bit)
@@ -147,7 +153,7 @@ export async function POST(req: Request) {
 
     if (!botNumber || botNumber.length < 10) {
       console.error("[AUTH] WHATSAPP_BOT_NUMBER missing or invalid");
-      return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500 });
+      return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500, headers: secureHeaders });
     }
 
     const redirectText = `Hey Hau Hau! 🌟\n\nI want to log in securely to my account.\n\nLOGIN Ref: ${token}`;
@@ -160,10 +166,10 @@ export async function POST(req: Request) {
       token, 
       redirect_url: whatsappUrl, 
       whatsapp_url: whatsappUrl 
-    });
+    }, { headers: secureHeaders });
     
   } catch (err: any) {
     console.error("Passwordless login error:", err);
-    return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, detail: "Internal Server Error" }, { status: 500, headers: secureHeaders });
   }
 }

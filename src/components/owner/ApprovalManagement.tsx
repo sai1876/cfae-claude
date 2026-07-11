@@ -17,7 +17,7 @@ export default function ApprovalManagement() {
       const user = auth.currentUser;
       if (!user) return;
       const token = await user.getIdToken();
-      const res = await fetch('/api/admin/approvals/list', {
+      const res = await fetch('/api/owner/approvals/list', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -44,7 +44,7 @@ export default function ApprovalManagement() {
       if (!user) return;
       const token = await user.getIdToken();
       
-      const res = await fetch('/api/admin/approvals/update', {
+      const res = await fetch('/api/owner/approvals/update', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

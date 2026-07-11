@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import StaffCopilot from '@/components/admin/StaffCopilot';
+import StaffCopilot from '@/components/owner/StaffCopilot';
 
 // Firebase core configuration & seeding imports
 import { auth } from '@/lib/firebase';
@@ -32,24 +32,24 @@ import { signOut } from 'firebase/auth';
 
 
 // Import our premium modular panels
-import DashboardStats from '@/components/admin/DashboardStats';
-import MenuManagement from '@/components/admin/MenuManagement';
-import InventoryManagement from '@/components/admin/InventoryManagement';
-import CRMManagement from '@/components/admin/CRMManagement';
-import UIAtmosphereManager from '@/components/admin/UIAtmosphereManager';
-import OfferManagement from '@/components/admin/OfferManagement';
-import StaffManagement from '@/components/admin/StaffManagement';
-import OutletManagement from '@/components/admin/OutletManagement';
-import ApprovalManagement from '@/components/admin/ApprovalManagement';
-import OrderHistory from '@/components/admin/OrderHistory';
-import OrderManagement from '@/components/admin/OrderManagement';
-import RefundManagement from '@/components/admin/RefundManagement';
-import WastageManagement from '@/components/admin/WastageManagement';
-import DailyClosingManagement from '@/components/admin/DailyClosingManagement';
+import DashboardStats from '@/components/owner/DashboardStats';
+import MenuManagement from '@/components/owner/MenuManagement';
+import InventoryManagement from '@/components/owner/InventoryManagement';
+import CRMManagement from '@/components/owner/CRMManagement';
+import UIAtmosphereManager from '@/components/owner/UIAtmosphereManager';
+import OfferManagement from '@/components/owner/OfferManagement';
+import StaffManagement from '@/components/owner/StaffManagement';
+import OutletManagement from '@/components/owner/OutletManagement';
+import ApprovalManagement from '@/components/owner/ApprovalManagement';
+import OrderHistory from '@/components/owner/OrderHistory';
+import OrderManagement from '@/components/owner/OrderManagement';
+import RefundManagement from '@/components/owner/RefundManagement';
+import WastageManagement from '@/components/owner/WastageManagement';
+import DailyClosingManagement from '@/components/owner/DailyClosingManagement';
 
 type TabType = 'dashboard' | 'menu' | 'offers' | 'inventory' | 'crm' | 'staff' | 'outlets' | 'atmosphere' | 'approvals' | 'orders' | 'active_orders' | 'refunds' | 'wastage' | 'daily_closings';
 
-export default function AdminPortalPage() {
+export default function OwnerPortalPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<'owner' | 'manager'>('owner');
@@ -140,7 +140,7 @@ export default function AdminPortalPage() {
       if (user && user.email) {
         try {
           const token = await user.getIdToken();
-          const res = await fetch('/api/admin/bootstrap', {
+          const res = await fetch('/api/owner/bootstrap', {
             headers: { Authorization: `Bearer ${token}` }
           });
           

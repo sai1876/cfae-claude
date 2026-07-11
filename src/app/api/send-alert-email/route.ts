@@ -101,7 +101,7 @@ export async function POST(req: Request) {
           </div>
           ${aiSection}
           <div style="text-align: center; margin-top: 25px; border-top: 1px solid #302117; padding-top: 15px;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin" style="background-color: #f8bc51; color: #060403; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">Open Admin Portal</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin" style="background-color: #f8bc51; color: #060403; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">Open Owner Portal</a>
           </div>
           <p style="font-size: 11px; color: #d4c4b0; opacity: 0.4; text-align: center; margin-top: 25px; font-family: monospace;">
             Hau Hau Cafe Automated Systems &bull; Generated Live

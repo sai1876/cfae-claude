@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
         const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
         
-        let redirectUrl = '/admin';
+        let redirectUrl = '/owner';
         try {
           const staffQuery = await adminDb.collection('staff').where('email', '==', decodedToken.email).limit(1).get();
           if (!staffQuery.empty) {

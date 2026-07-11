@@ -15,7 +15,7 @@ import { isTerminalOrderStatus, isCompletedOrderStatus, isRefundEligibleOrder } 
 import { createRefundRequest, CreateRefundRequestPayload, getUserRefundRequests } from '@/features/orders/orderService';
 import dynamic from 'next/dynamic';
 
-const LocationPickerMap = dynamic(() => import('@/components/admin/LocationPickerMap'), { ssr: false });
+const LocationPickerMap = dynamic(() => import('@/components/owner/LocationPickerMap'), { ssr: false });
 
 function CustomSelect({ value, onChange, options }: { value: string, onChange: (v: any) => void, options: {value: string, label: string}[] }) {
   const [isOpen, setIsOpen] = useState(false);
