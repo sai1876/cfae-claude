@@ -80,14 +80,36 @@ export const createOrderServer = async (
     let itemUnitPrice = menuData.price || 0;
     
     // Add modifier prices
-    if (item.modifiers && item.modifiers.length > 0 && menuData.customizationOptions) {
+    if (item.modifiers && item.modifiers.length > 0) {
       for (const selectedMod of item.modifiers) {
-        for (const group of menuData.customizationOptions) {
-          const matchedOpt = group.options.find(
-            (opt: any) => opt.name.toLowerCase().trim() === selectedMod.toLowerCase().trim()
-          );
-          if (matchedOpt && matchedOpt.price) {
-            itemUnitPrice += matchedOpt.price;
+        let modFound = false;
+        
+        if (menuData.customizationOptions) {
+          for (const group of menuData.customizationOptions) {
+            const matchedOpt = group.options.find(
+              (opt: any) => opt.name.toLowerCase().trim() === selectedMod.toLowerCase().trim()
+            );
+            if (matchedOpt) {
+              if (matchedOpt.price) {
+                itemUnitPrice += matchedOpt.price;
+              }
+              modFound = true;
+              break;
+            }
+          }
+        }
+        
+        // Fallback for hardcoded CAT_CONFIG add-ons (temporary compatibility layer)
+        if (!modFound) {
+          const modName = selectedMod.toLowerCase().trim();
+          let fallbackPrice = 0;
+          if (modName === 'extra raita') fallbackPrice = 10;
+          else if (modName === 'boiled egg') fallbackPrice = 15;
+          else if (modName === 'large size') fallbackPrice = 30;
+          
+          if (fallbackPrice > 0) {
+            itemUnitPrice += fallbackPrice;
+            console.warn(`[WARNING] pricing_fallback_modifier_used: ${selectedMod} added ₹${fallbackPrice} via fallback`);
           }
         }
       }

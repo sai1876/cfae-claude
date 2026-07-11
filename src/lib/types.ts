@@ -97,6 +97,8 @@ export interface OrderDocument {
   points_redeemed: number;
   cash_paid: number; // If paying at counter
   order_type: OrderType;
+  display_order_code?: string;
+  subtotal_amount?: number;
   hatch?: string; // Location identifier (e.g. OASIS / SMOKING)
   table_no?: string; // If dine-in
   outlet?: string; // Global outlet branch

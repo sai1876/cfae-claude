@@ -100,6 +100,56 @@ describe('createOrderServer pricing logic', () => {
     ).rejects.toThrow('Menu item is currently unavailable: Burger');
   });
 
+  it('applies fallback pricing for known modifiers', async () => {
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      id: 'biryani',
+      data: () => ({
+        price: 150,
+        is_available: true,
+        name: 'Biryani'
+      })
+    });
+    mockWhere.mockReturnValue({ limit: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ empty: true }) }) });
+
+    const orderData = await createOrderServer(
+      'test-uid',
+      155,
+      undefined,
+      0,
+      'pickup',
+      [{ menuItemId: 'biryani', quantity: 1, modifiers: ['Extra Raita'] }]
+    );
+
+    // 150 + 10 (Extra Raita) = 160 + 5 (platform fee) = 165
+    expect(orderData.gross_amount).toBe(165);
+  });
+
+  it('applies fallback pricing for multiple known modifiers and ignores unknown', async () => {
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      id: 'biryani',
+      data: () => ({
+        price: 150,
+        is_available: true,
+        name: 'Biryani'
+      })
+    });
+    mockWhere.mockReturnValue({ limit: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue({ empty: true }) }) });
+
+    const orderData = await createOrderServer(
+      'test-uid',
+      155,
+      undefined,
+      0,
+      'pickup',
+      [{ menuItemId: 'biryani', quantity: 1, modifiers: ['Extra Raita', 'Boiled Egg', 'Unknown Mod'] }]
+    );
+
+    // 150 + 10 + 15 = 175 + 5 (platform fee) = 180
+    expect(orderData.gross_amount).toBe(180);
+  });
+
   it('calculates points redemption server-side with 20% cap', async () => {
     mockGet.mockResolvedValueOnce({
       exists: true,

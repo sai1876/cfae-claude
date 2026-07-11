@@ -9,8 +9,8 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { useStore } from '@/store/useStore';
 import { streamUserOrders } from '@/lib/dbService';
 import { OrderDocument, Staff } from '@/lib/types';
+import { getBusinessDateContext, getBusinessWindow } from '@/lib/businessDate';
 import dynamic from 'next/dynamic';
-
 const CustomerDeliveryMap = dynamic(() => import('./CustomerDeliveryMap'), { ssr: false });
 
 export default function FloatingOrderTracker({ showNavigation = false }: { showNavigation?: boolean }) {
@@ -38,7 +38,25 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
     return () => unsubscribe();
   }, [user?.uid, setActiveOrders]);
 
-  const activeTrackableOrders = activeOrders.filter(o => isActiveOrderStatus(o.status));
+  const nowMs = Date.now();
+  const currentWindow = getBusinessWindow(getBusinessDateContext(nowMs).business_date);
+
+  const activeTrackableOrders = activeOrders.filter(o => {
+    if (!isActiveOrderStatus(o.status)) return false;
+    
+    const createdMs = o.created_at || nowMs;
+    const ageMs = nowMs - createdMs;
+    
+    const isWorking = ['preparing', 'ready'].includes(o.status);
+    const isTooOld = ageMs > 24 * 60 * 60 * 1000;
+    const isPastWindow = createdMs < currentWindow.start_at;
+    
+    if (!isWorking && (isTooOld || isPastWindow)) {
+      return false; // Skip stale pending/confirmed orders
+    }
+    
+    return true;
+  });
   
   const activeOrder = selectedTrackingOrderId 
     ? activeTrackableOrders.find(o => o.order_id === selectedTrackingOrderId) || null
@@ -185,7 +203,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
         ) : (
           <>
             <span style={{ color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold', fontSize: 13, letterSpacing: '0.05em' }}>
-              #{displayOrder.order_type === 'delivery' ? displayOrder.order_id : displayOrder.token_number}
+              #{displayOrder.token_number} · {displayOrder.display_order_code || displayOrder.order_id.slice(-6).toUpperCase()}
             </span>
             <div style={{ width: '1.5px', height: '12px', background: 'rgba(212,163,84,0.2)' }} />
             <span style={{ color: 'var(--foreground)', fontSize: 11, textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.05em' }}>
@@ -232,7 +250,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-sm text-white font-bold">
-                          #{order.order_type === 'delivery' ? order.order_id : order.token_number}
+                          #{order.token_number} · {order.display_order_code || order.order_id.slice(-6).toUpperCase()}
                         </span>
                         <span className="text-[9px] font-mono uppercase bg-[#302117]/50 text-[#d4c4b0] px-2 py-0.5 rounded">
                           {order.order_type}
@@ -240,7 +258,7 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
                       </div>
                       <div className="text-[10px] text-[#d4c4b0]/60 font-mono uppercase tracking-wider">
                         {order.status === 'ready' ? 'Ready' : order.status === 'preparing' ? 'Preparing' : order.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                        {' • '}₹{order.gross_amount}
+                        {' • '}₹{order.gross_amount ?? (order as any).total_amount ?? ((order.subtotal_amount || 0) + ((order as any).platform_fee || 0))}
                       </div>
                     </div>
                     <div className="text-[#f8bc51] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -295,10 +313,8 @@ export default function FloatingOrderTracker({ showNavigation = false }: { showN
               <div className="p-6">
                 {/* Header info */}
                 <div className="flex items-center gap-4 mb-6">
-                  <div className={`h-14 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/30 flex items-center justify-center font-mono font-black text-[var(--primary)] shadow-[0_0_15px_rgba(212,163,84,0.1)] ${
-                    activeOrder.order_type === 'delivery' ? 'px-4 text-sm' : 'w-14 text-2xl'
-                  }`}>
-                    #{activeOrder.order_type === 'delivery' ? activeOrder.order_id : activeOrder.token_number}
+                  <div className="h-14 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/30 flex items-center justify-center font-mono font-black text-[var(--primary)] shadow-[0_0_15px_rgba(212,163,84,0.1)] px-4 text-sm">
+                    #{activeOrder.token_number} · {activeOrder.display_order_code || activeOrder.order_id.slice(-6).toUpperCase()}
                   </div>
                   <div>
                     <span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground block">Active Order Tracker</span>
